@@ -1,0 +1,84 @@
+# ═══════════════════════════════════════════════════════════
+#  IMPORTANTE
+#
+#  Este repositorio es publico. Todo lo que entre al historial
+#  queda visible para siempre, aunque se borre en un commit
+#  posterior.
+#
+#  Antes de agregar cualquier archivo con configuracion,
+#  verificar que no lleve valores reales.
+# ═══════════════════════════════════════════════════════════
+
+
+# ── Secretos y configuracion local ──
+# Los valores reales viven en user-secrets (desarrollo) y en
+# variables de entorno (servidor). Nunca en el repositorio.
+
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
+
+
+# ── .NET ──
+bin/
+obj/
+out/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.csproj.user
+.vs/
+.vscode/
+*.received.*
+
+
+# ── Node y Angular ──
+node_modules/
+.angular/
+dist/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+
+# ── Archivos subidos por usuarios ──
+# Las fotos de vehiculos viven en R2, no en el repositorio.
+wwwroot/uploads/
+**/uploads/
+
+
+# ── Respaldos ──
+*.sql.gz
+respaldos/
+backups/
+
+
+# ── Registros ──
+logs/
+*.log
+
+
+# ── Sistema operativo ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ── Docker ──
+# Los compose de produccion llevan credenciales y viven solo
+# en el servidor.
+docker-compose.produccion.yml
+docker-compose.override.yml
