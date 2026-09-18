@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════════════
+#  Base de datos para desarrollo local.
+#
+#  Solo Postgres: el API y Angular corren fuera del contenedor
+#  para poder depurarlos desde Visual Studio y ver los cambios
+#  al instante.
+#
+#  El compose de produccion es otro archivo y vive en el
+#  servidor, porque lleva credenciales.
+# ═══════════════════════════════════════════════════════════
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: caribe-db
+
+    # Arranca solo al abrir Docker Desktop. Sin esto hay que
+    # acordarse de levantarlo cada vez que se reinicia la maquina.
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: caribe
+      # Credencial de desarrollo local. La de produccion vive en
+      # el .env del servidor y nunca se parece a esta.
+      POSTGRES_PASSWORD: dev_local_caribe_2026
+      POSTGRES_DB: caribe
+
+      # El collation de Postgres afecta como se ordenan los textos.
+      # Con es_CR.UTF-8, la "n" y la "ñ" quedan en el orden correcto
+      # al listar marcas o modelos.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+
+    ports:
+      # Solo escucha en localhost: aunque la computadora este en
+      # una red compartida, nadie mas alcanza la base.
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      - caribe_datos:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U caribe -d caribe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  caribe_datos:

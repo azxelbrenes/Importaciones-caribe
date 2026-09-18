@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Caribe.AccesoDatos/Caribe.AccesoDatos.csproj" />
+  <Project Path="Caribe.Api/Caribe.Api.csproj" />
+  <Project Path="Caribe.Dominio/Caribe.Dominio.csproj" />
+  <Project Path="Caribe.LogicaNegocio/Caribe.LogicaNegocio.csproj" />
+  <Project Path="Caribe.Utilitarios/Caribe.Utilitarios.csproj" />
+</Solution>

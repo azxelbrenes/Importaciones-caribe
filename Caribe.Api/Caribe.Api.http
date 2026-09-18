@@ -1,0 +1,6 @@
+@Caribe.Api_HostAddress = http://localhost:5245
+
+GET {{Caribe.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
