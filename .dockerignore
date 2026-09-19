@@ -1,0 +1,26 @@
+# Lo que no debe entrar a la imagen. Sin esto, el contexto de
+# compilacion sube cientos de megabytes al demonio de Docker.
+
+**/bin/
+**/obj/
+**/node_modules/
+**/.angular/
+**/dist/
+
+.git/
+.github/
+.vs/
+.vscode/
+
+**/*.user
+**/appsettings.Development.json
+**/appsettings.Local.json
+.env
+.env.*
+
+**/wwwroot/uploads/
+**/logs/
+respaldos/
+
+*.md
+LICENSE

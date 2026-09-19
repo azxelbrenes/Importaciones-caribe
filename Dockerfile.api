@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════════════════
+#  API — compilacion en varias etapas
+#
+#  La imagen final NO lleva el SDK ni el codigo fuente: solo
+#  el runtime y los binarios. Pasa de ~800 MB a ~230 MB, y
+#  sobre todo no deja el codigo del negocio dentro de un
+#  contenedor que corre expuesto a internet.
+# ═══════════════════════════════════════════════════════════
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Primero solo los .csproj: mientras no cambien las dependencias,
+# Docker reutiliza la capa de restore. Un cambio de codigo que no
+# toca paquetes se compila en segundos en vez de minutos.
+COPY Caribe.Dominio/*.csproj        Caribe.Dominio/
+COPY Caribe.Utilitarios/*.csproj    Caribe.Utilitarios/
+COPY Caribe.AccesoDatos/*.csproj    Caribe.AccesoDatos/
+COPY Caribe.LogicaNegocio/*.csproj  Caribe.LogicaNegocio/
+COPY Caribe.Api/*.csproj            Caribe.Api/
+
+RUN dotnet restore Caribe.Api/Caribe.Api.csproj
+
+COPY . .
+
+RUN dotnet publish Caribe.Api/Caribe.Api.csproj \
+    -c Release -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+
+# ── Ejecucion ──
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+# Magick.NET necesita estas bibliotecas del sistema para procesar
+# imagenes. Sin ellas compila pero falla al subir la primera foto.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgomp1 curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# Usuario sin privilegios: si alguien logra ejecutar codigo dentro
+# del contenedor, no lo hace como root.
+RUN useradd --create-home --shell /usr/sbin/nologin caribe
+
+COPY --from=build /app/publish .
+
+# Carpeta de subidas para cuando se usa almacenamiento local.
+RUN mkdir -p /app/wwwroot/uploads && chown -R caribe:caribe /app
+
+USER caribe
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
+
+# Docker reinicia el contenedor si el API deja de responder, aunque
+# el proceso siga vivo.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "Caribe.Api.dll"]

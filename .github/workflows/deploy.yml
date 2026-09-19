@@ -1,0 +1,105 @@
+name: Desplegar
+
+on:
+  push:
+    branches: [main]
+  # Permite lanzarlo a mano desde la pestana Actions, util para
+  # reintentar sin tener que hacer un commit vacio.
+  workflow_dispatch:
+
+env:
+  REGISTRO: ghcr.io
+
+jobs:
+  construir:
+    name: Construir API
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # El nombre del repositorio tiene mayuscula, y los registros de
+      # imagenes solo aceptan minusculas. Se convierte aqui en vez de
+      # escribirlo a mano, para que siga funcionando si cambia.
+      - name: Preparar nombre de imagen
+        id: nombre
+        run: echo "imagen=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Entrar al registro
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRO }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.api
+          push: true
+          tags: |
+            ${{ env.REGISTRO }}/${{ steps.nombre.outputs.imagen }}-api:latest
+            ${{ env.REGISTRO }}/${{ steps.nombre.outputs.imagen }}-api:${{ github.sha }}
+          # Cache entre ejecuciones: la segunda compilacion tarda un
+          # tercio de la primera.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  desplegar:
+    name: Desplegar al servidor
+    needs: construir
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conectar y actualizar
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/caribe
+
+            echo "── Descargando imagen nueva ──"
+            docker compose pull api
+
+            echo "── Levantando ──"
+            docker compose up -d api
+
+            echo "── Limpiando imagenes viejas ──"
+            # Sin esto, cada despliegue deja la imagen anterior y el
+            # disco de 55 GB se llena en unas semanas.
+            docker image prune -f --filter "until=168h"
+
+  verificar:
+    name: Verificar
+    needs: desplegar
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Esperar y comprobar salud
+        run: |
+          echo "Esperando a que el API responda…"
+
+          # Hasta 60 segundos: el contenedor tarda en arrancar y en
+          # aplicar migraciones pendientes.
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 5 https://${{ secrets.DOMINIO }}/health > /dev/null; then
+              echo "✓ El API responde correctamente."
+              exit 0
+            fi
+            echo "  intento $i de 12…"
+            sleep 5
+          done
+
+          echo "✗ El API no respondió después de 60 segundos."
+          echo "  Revisar: ssh al servidor y 'docker compose logs api --tail=50'"
+          exit 1
