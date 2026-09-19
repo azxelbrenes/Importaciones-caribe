@@ -1,0 +1,48 @@
+# ═══════════════════════════════════════════════════════════
+#  Frontend Angular con renderizado en servidor.
+#
+#  SSR y no solo estaticos porque el catalogo tiene que ser
+#  indexable: Google lee el HTML que llega, y una aplicacion
+#  que se dibuja con JavaScript le llega vacia.
+# ═══════════════════════════════════════════════════════════
+
+FROM node:24-alpine AS build
+WORKDIR /app
+
+# Primero solo los manifiestos: mientras no cambien las
+# dependencias, Docker reutiliza la capa de instalacion. Un
+# cambio de codigo que no toca paquetes compila en segundos.
+COPY caribe-web/package*.json ./
+
+# npm ci y no npm install: instala exactamente lo que dice el
+# package-lock. Con install, una version nueva de una dependencia
+# podria entrar sin que nadie lo decida.
+RUN npm ci
+
+COPY caribe-web/ ./
+
+RUN npm run build
+
+
+# ── Ejecucion ──
+FROM node:24-alpine AS final
+WORKDIR /app
+
+# Usuario sin privilegios: si alguien logra ejecutar codigo
+# dentro del contenedor, no lo hace como root.
+RUN addgroup -S caribe && adduser -S caribe -G caribe
+
+# Solo el resultado de la compilacion. Ni el codigo fuente ni
+# node_modules de desarrollo, que pesan cientos de megabytes.
+COPY --from=build --chown=caribe:caribe /app/dist ./dist
+
+USER caribe
+
+ENV NODE_ENV=production
+ENV PORT=4000
+EXPOSE 4000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -q --spider http://localhost:4000/ || exit 1
+
+CMD ["node", "dist/caribe-web/server/server.mjs"]
