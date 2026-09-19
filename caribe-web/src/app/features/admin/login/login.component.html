@@ -1,0 +1,86 @@
+<div class="pantalla">
+  <div class="caja">
+
+    <header class="marca">
+      <img src="logo.jpg" alt="" width="64" height="64">
+      <strong>Importaciones del Caribe</strong>
+      <small>Panel administrativo</small>
+    </header>
+
+    @if (motivo()) {
+      <p class="aviso">{{ motivo() }}</p>
+    }
+
+    @if (paso() === 1) {
+
+      <div class="campo">
+        <label for="l-email">Correo</label>
+        <input id="l-email" type="email" autocomplete="username"
+               inputmode="email" placeholder="correo@dominio.com"
+               [ngModel]="email()" (ngModelChange)="email.set($event)"
+               (keyup.enter)="enviar()">
+      </div>
+
+      <div class="campo">
+        <label for="l-pass">Contraseña</label>
+        <div class="con-boton">
+          <input id="l-pass"
+                 [type]="verPassword() ? 'text' : 'password'"
+                 autocomplete="current-password"
+                 [ngModel]="password()" (ngModelChange)="password.set($event)"
+                 (keyup.enter)="enviar()">
+
+          <!-- Ver la contraseña reduce errores de tecleo, sobre todo
+               en móvil. Es una casilla, no un riesgo. -->
+          <button type="button"
+                  [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  (click)="verPassword.update(v => !v)">
+            @if (verPassword()) { Ocultar } @else { Ver }
+          </button>
+        </div>
+      </div>
+
+      <a class="olvide" routerLink="/admin/recuperar">¿Olvidó su contraseña?</a>
+
+    } @else {
+
+      <div class="paso-dos">
+        <p class="titulo">Verificación en dos pasos</p>
+        <p class="ayuda">
+          Abrí tu aplicación de autenticación y escribí el código de
+          6 dígitos que aparece.
+        </p>
+
+        <div class="campo">
+          <label for="l-codigo">Código</label>
+          <input id="l-codigo" type="text" inputmode="numeric"
+                 autocomplete="one-time-code" maxlength="6"
+                 placeholder="000000" class="codigo"
+                 [ngModel]="codigo()"
+                 (ngModelChange)="alEscribirCodigo($event)"
+                 (keyup.enter)="enviar()">
+        </div>
+
+        <button class="volver" type="button" (click)="volverAlPaso1()">
+          ← Usar otra cuenta
+        </button>
+      </div>
+    }
+
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <button class="entrar" type="button"
+            [disabled]="!valido || enviando()"
+            (click)="enviar()">
+      @if (enviando()) { Verificando… }
+      @else if (paso() === 1) { Ingresar }
+      @else { Verificar }
+    </button>
+
+    <p class="nota">
+      Acceso restringido. Todos los ingresos quedan registrados.
+    </p>
+  </div>
+</div>

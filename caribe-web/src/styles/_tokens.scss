@@ -1,0 +1,58 @@
+// ═══════════════════════════════════════════════════════════
+//  Variables de diseno.
+//
+//  Todo color, tipografia y medida del sistema sale de aqui.
+//  Un valor escrito a mano en un componente es un valor que
+//  manana nadie va a encontrar cuando haya que cambiarlo.
+// ═══════════════════════════════════════════════════════════
+
+:root {
+  // ── Superficies ──
+  // Cinco niveles de profundidad. La diferencia entre cada uno es
+  // de pocos puntos de luminosidad: suficiente para separar
+  // secciones sin que se perciba como cambio de color.
+  --void:   #05070A;
+  --panel:  #0B0F15;
+  --panel2: #131A24;
+  --raise:  #1A222E;
+  --hover:  #212B39;
+
+  // ── Marca ──
+  // Azul y rojo de la bandera de Costa Rica. Es el negocio de
+  // traer carros de EE. UU. a CR, y los dos paises comparten
+  // esos colores.
+  --blue:   #1580E8;
+  --blue-d: #0A56AC;
+  --blue-l: #4DA3F0;
+
+  --red:    #E01E2B;
+  --red-d:  #A5121C;
+  --red-l:  #F5303D;
+
+  // ── Estados ──
+  --ok:   #1FA97F;
+  --warn: #D9A22B;
+
+  // ── Texto ──
+  --txt:   #E8EEF4;
+  --muted: #8A99AB;
+  --dim:   #63717F;
+
+  // ── Lineas ──
+  --line:  rgba(255, 255, 255, .09);
+  --line2: rgba(255, 255, 255, .16);
+
+  // ── Tipografias ──
+  // Saira Condensed para titulos: condensada, asi un titular en
+  // mayusculas entra en una linea en el celular.
+  --disp: 'Saira Condensed', 'Arial Narrow', sans-serif;
+  --body: 'Barlow', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+  // ── Medidas ──
+  --wrap: 1180px;
+
+  // Altura de la barra del panel. Se usa para calcular el
+  // desplazamiento de los anclajes.
+  --barra: 62px;
+}

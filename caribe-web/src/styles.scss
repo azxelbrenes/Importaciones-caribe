@@ -1,0 +1,155 @@
+@use './styles/tokens';
+
+// ═══════════════════════════════════════════════════════════
+//  Estilos globales
+// ═══════════════════════════════════════════════════════════
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  // El desplazamiento suave se desactiva mas abajo para quien
+  // pidio reducir animaciones.
+  scroll-behavior: smooth;
+
+  // Sin esto, los anclajes quedan tapados por la barra fija.
+  scroll-padding-top: calc(var(--barra) + 16px);
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--txt);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Le dice al navegador que la pagina es oscura. Sin esto, los
+// desplegables nativos y las barras de scroll salen en blanco
+// sobre el fondo negro.
+:root {
+  color-scheme: dark;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--disp);
+  font-weight: 700;
+  line-height: 1.05;
+  margin: 0;
+}
+
+p { margin: 0; }
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+  transition: color .2s;
+
+  &:hover { color: var(--blue-l); }
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+// ── Formularios ──
+
+input,
+select,
+textarea {
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--txt);
+  background: #070A0E;
+  border: 1px solid var(--line2);
+  padding: 12px;
+  width: 100%;
+
+  &:focus {
+    border-color: var(--blue);
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+
+  &::placeholder { color: #4E5866; }
+}
+
+// La flecha nativa del select no respeta el tema oscuro en todos
+// los navegadores. Se dibuja una propia en SVG.
+select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A99AB' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+// Quita las flechitas del input numerico: ocupan espacio y en
+// movil no sirven para nada.
+input[type="number"] {
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+// ── Barra de desplazamiento ──
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb {
+  background: var(--raise);
+  border: 2px solid var(--void);
+
+  &:hover { background: var(--hover); }
+}
+
+// ── Accesibilidad ──
+
+// Quien configuro su sistema para reducir animaciones tiene una
+// razon: vertigo, migrana o epilepsia fotosensible. No es una
+// preferencia estetica.
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+// Foco visible para navegacion con teclado. Sin esto, quien usa
+// Tab no sabe donde esta parado.
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
