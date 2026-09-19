@@ -1,6 +1,225 @@
-@Caribe.Api_HostAddress = http://localhost:5245
+### ═══════════════════════════════════════════════════════
+###  Pruebas del API
+###
+###  IMPORTANTE: este archivo SI se sube al repositorio.
+###  Nunca escribir credenciales reales aquí — usar el
+###  marcador PEGAR_ANTES_DE_EJECUTAR y borrarlo después.
+### ═══════════════════════════════════════════════════════
 
-GET {{Caribe.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@host = http://localhost:5049
+# @host = https://importacionescaribecr.com
+
+
+### ── Salud ──
+GET {{host}}/health
+
+
+### ══════════════ AUTENTICACION ══════════════
+
+# @name login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "PEGAR_ANTES_DE_EJECUTAR",
+  "password": "PEGAR_ANTES_DE_EJECUTAR"
+}
+
+### El token sale de $.token.accessToken porque el login
+### devuelve { requiereDobleFactor, token }
+@token = {{login.response.body.$.token.accessToken}}
+
+
+### Login con doble factor activo
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "PEGAR_ANTES_DE_EJECUTAR",
+  "password": "PEGAR_ANTES_DE_EJECUTAR",
+  "codigoDobleFactor": "123456"
+}
+
+
+### Recuperar contraseña — siempre responde Ok
+POST {{host}}/api/auth/recuperar
+Content-Type: application/json
+
+{ "email": "correo@ejemplo.com" }
+
+
+### Restablecer con el token del correo
+POST {{host}}/api/auth/restablecer
+Content-Type: application/json
+
+{
+  "token": "PEGAR_DEL_CORREO",
+  "passwordNueva": "NuevaClave2026",
+  "confirmarPassword": "NuevaClave2026"
+}
+
+
+### Sesiones abiertas
+GET {{host}}/api/auth/sesiones
+Authorization: Bearer {{token}}
+
+
+### ══════════════ CATALOGO ══════════════
+
+### Marcas (público)
+GET {{host}}/api/catalogo/marcas
+
+
+### Crear marca
+POST {{host}}/api/catalogo/marcas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Toyota" }
+
+
+### Crear modelo
+POST {{host}}/api/catalogo/modelos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "marcaId": 1, "nombre": "Tacoma" }
+
+
+### Opciones de desplegables
+GET {{host}}/api/catalogo/opciones/transmision
+
+
+### ══════════════ VEHICULOS ══════════════
+
+### Catálogo público
+GET {{host}}/api/vehiculos?pagina=1&porPagina=12
+
+
+### Destacado del inicio
+GET {{host}}/api/vehiculos/destacado
+
+
+### Listado del panel — con costos y margen
+GET {{host}}/api/vehiculos/admin
+Authorization: Bearer {{token}}
+
+
+### Crear vehículo
+### El precio NO se envía: lo calcula el servidor
+POST {{host}}/api/vehiculos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "marcaId": 1,
+  "modeloId": 1,
+  "anio": 2023,
+  "kilometraje": 19800,
+  "transmision": 0,
+  "combustible": 0,
+  "traccion": 1,
+  "color": "Blanco",
+  "descripcion": "TRD Off-Road, un dueño.",
+  "costoVehiculo": 38000,
+  "costoFlete": 2200,
+  "costoImpuestos": 18500,
+  "costoTramites": 1300,
+  "honorario": 1500,
+  "vigenciaDias": 7,
+  "destacado": true,
+  "aceptaFinanciamiento": true
+}
+
+
+### Publicar — falla si no tiene fotos
+PATCH {{host}}/api/vehiculos/1/estado
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nuevoEstado": 1 }
+
+
+### ══════════════ SOLICITUDES ══════════════
+
+### Formulario público
+POST {{host}}/api/solicitudes
+Content-Type: application/json
+
+{
+  "nombre": "Carlos Jiménez",
+  "whatsapp": "88887777",
+  "marcaTexto": "Toyota",
+  "modeloTexto": "4Runner",
+  "anioDesde": 2021,
+  "presupuestoMax": 45000,
+  "formaPago": 2,
+  "plazoMesesInteres": 24,
+  "origen": 1,
+  "consentimiento": true
+}
+
+
+### Bandeja
+GET {{host}}/api/solicitudes
+Authorization: Bearer {{token}}
+
+
+### Archivar
+POST {{host}}/api/solicitudes/1/archivar
+Authorization: Bearer {{token}}
+
+
+### ══════════════ FINANCIAMIENTO ══════════════
+
+### Simular — devuelve null si está apagado
+GET {{host}}/api/financiamiento/simular?precio=61500
+
+
+### Configuración actual
+GET {{host}}/api/financiamiento/configuracion
+Authorization: Bearer {{token}}
+
+
+### Activar — falla sin tasa o sin texto legal
+PUT {{host}}/api/financiamiento/configuracion
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "activo": true,
+  "porcentajePrima": 50,
+  "tasaAnual": 18,
+  "plazoMinimoMeses": 12,
+  "plazoMaximoMeses": 36,
+  "plazosDisponibles": "12,24,36",
+  "textoLegal": "Cálculo referencial. Sujeto a aprobación crediticia."
+}
+
+
+### ══════════════ ESTADISTICAS ══════════════
+
+GET {{host}}/api/estadisticas/resumen
+Authorization: Bearer {{token}}
 
 ###
+GET {{host}}/api/estadisticas/pipeline
+Authorization: Bearer {{token}}
+
+###
+GET {{host}}/api/estadisticas/marcas-solicitadas
+Authorization: Bearer {{token}}
+
+
+### ══════════════ USUARIOS ══════════════
+
+GET {{host}}/api/usuarios
+Authorization: Bearer {{token}}
+
+
+### Invitar
+POST {{host}}/api/usuarios/invitaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "email": "persona@ejemplo.com", "rol": 2 }
