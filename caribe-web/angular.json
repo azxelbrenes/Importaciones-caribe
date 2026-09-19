@@ -36,7 +36,11 @@
             "server": "src/main.server.ts",
             "outputMode": "server",
             "security": {
-              "allowedHosts": []
+              "allowedHosts": [
+                "importacionescaribecr.com",
+                "www.importacionescaribecr.com",
+                "localhost"
+              ]
             },
             "ssr": {
               "entry": "src/server.ts"
