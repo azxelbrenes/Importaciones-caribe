@@ -1,0 +1,317 @@
+// ═══════════════════════════════════════════════════════════
+//  Estilos compartidos del panel.
+//
+//  Todo lo que aparece en dos o mas pantallas vive aqui. En el
+//  proyecto anterior esto estaba duplicado en cinco archivos:
+//  cambiar el color de una pastilla obligaba a editar cinco
+//  veces, y bastaba olvidar uno para que una pantalla quedara
+//  distinta. Uno de esos archivos llego a superar el limite de
+//  tamano de Angular por pura repeticion.
+//
+//  Se importa con:  @use '../../../../styles/panel';
+// ═══════════════════════════════════════════════════════════
+
+// ── Avisos ──
+
+.nota {
+  padding: 12px 14px;
+  font-size: 13.5px;
+  margin: 0 0 16px;
+  line-height: 1.5;
+
+  &.exito {
+    border-left: 3px solid var(--ok);
+    background: rgba(31, 169, 127, .1);
+    color: #6FE0BC;
+  }
+
+  &.error {
+    border-left: 3px solid var(--red);
+    background: rgba(224, 30, 43, .09);
+    color: #FF9098;
+  }
+
+  &.alerta {
+    border-left: 3px solid var(--warn);
+    background: rgba(217, 162, 43, .08);
+    color: #D9BC77;
+  }
+}
+
+// ── Paneles ──
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 22px;
+  margin-bottom: 16px;
+
+  > h2 {
+    font-family: var(--disp);
+    font-size: 19px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1;
+    margin: 0 0 16px;
+  }
+}
+
+// ── Campos ──
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.ancho { grid-column: 1 / -1; }
+
+  label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dim);
+
+    span { color: var(--red); }
+  }
+
+  small { font-size: 11.5px; color: var(--dim); line-height: 1.45; }
+}
+
+// ── Filtros ──
+
+.filtros {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+// ── Botones ──
+
+.btn-principal {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  font-family: var(--disp);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { filter: brightness(1.15); color: #fff; }
+  &:disabled { opacity: .35; cursor: not-allowed; }
+}
+
+.btn-borde {
+  background: transparent;
+  border: 1px solid var(--line2);
+  color: #A9B7C5;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 8px 13px;
+  white-space: nowrap;
+
+  &:hover { border-color: var(--blue); color: var(--blue); }
+}
+
+.btn-peligro {
+  background: transparent;
+  border: 1px solid rgba(224, 30, 43, .32);
+  color: #FF7079;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 8px 13px;
+  white-space: nowrap;
+
+  &:hover { background: rgba(224, 30, 43, .12); }
+}
+
+// ── Pastillas de estado ──
+
+.pastilla {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  white-space: nowrap;
+
+  // Vehículos
+  &.borrador   { background: rgba(138,153,171,.16); color: #A9B7C5; }
+  &.disponible { background: rgba(21,128,232,.18);  color: #6FB4F5; }
+  &.trato      { background: rgba(217,162,43,.18);  color: #E9C169; }
+  &.transito   { background: rgba(21,128,232,.12);  color: #4E93D8; }
+  &.vendido    { background: rgba(31,169,127,.18);  color: #6FE0BC; }
+  &.archivado  { background: rgba(99,113,127,.16);  color: #7A8798; }
+
+  // Solicitudes
+  &.nueva      { background: rgba(224,30,43,.18);  color: #FF8A92; }
+  &.contactada { background: rgba(21,128,232,.18); color: #6FB4F5; }
+  &.proceso    { background: rgba(217,162,43,.18); color: #E9C169; }
+  &.cerrada    { background: rgba(31,169,127,.18); color: #6FE0BC; }
+  &.descartada { background: rgba(99,113,127,.16); color: #7A8798; }
+
+  // Roles
+  &.rol { background: var(--raise); color: #A9B7C5; }
+}
+
+// ── Tablas ──
+
+.tabla-envoltura {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--dim);
+    font-weight: 500;
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--line2);
+    white-space: nowrap;
+
+    &.num { text-align: right; }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--line);
+    transition: background .15s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: rgba(255, 255, 255, .022); }
+
+    // Las filas desactivadas se atenúan: siguen visibles para poder
+    // reactivarlas, sin competir con las activas.
+    &.inactivo { opacity: .5; }
+  }
+
+  td {
+    padding: 12px 14px;
+    vertical-align: middle;
+
+    &.num { text-align: right; }
+    &.mono { font-family: var(--mono); font-size: 13px; }
+    &.fuerte { color: var(--txt); font-weight: 600; }
+  }
+}
+
+// ── Paginación ──
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+
+  button {
+    background: transparent;
+    border: 1px solid var(--line2);
+    color: #B9C6D3;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 9px 14px;
+
+    &:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+    &:disabled { opacity: .35; cursor: not-allowed; }
+  }
+
+  span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+}
+
+.conteo {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--dim);
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+// ── Carga y vacío ──
+
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .fila {
+    height: 56px;
+    background: linear-gradient(90deg, var(--raise) 25%, #232d3a 50%, var(--raise) 75%);
+    background-size: 200% 100%;
+    animation: brillo 1.4s infinite;
+  }
+}
+
+@keyframes brillo {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.vacio {
+  background: var(--panel);
+  border: 1px dashed var(--line2);
+  padding: 56px 24px;
+  text-align: center;
+
+  .titulo {
+    font-family: var(--disp);
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin: 0 auto;
+    max-width: 48ch;
+    line-height: 1.55;
+  }
+}
+
+.cargando {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+  margin: 0;
+}
+
+// ── Ventanas ──
+
+.fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: rgba(5, 7, 10, .85);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: auto;
+
+  @media (max-width: 700px) { padding: 0; place-items: start; }
+}

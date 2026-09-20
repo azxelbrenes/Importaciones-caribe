@@ -1,0 +1,64 @@
+<div class="admin">
+
+  <!-- ── Barra lateral ── -->
+  <aside class="lateral" [class.abierta]="menuAbierto()">
+    <div class="marca">
+      <img src="logo.jpg" alt="" width="40" height="40">
+      <div class="texto">
+        <strong>Caribe CR</strong>
+        <small>Panel</small>
+      </div>
+    </div>
+
+    <nav class="menu">
+      @for (s of secciones(); track s.ruta) {
+        <a [routerLink]="s.ruta"
+           routerLinkActive="activo"
+           [routerLinkActiveOptions]="{ exact: s.exacta ?? false }"
+           (click)="cerrarMenu()">
+          <span class="icono" aria-hidden="true">{{ s.icono }}</span>
+          <span class="titulo">{{ s.titulo }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="pie-lateral">
+      <a class="ver-sitio" routerLink="/" (click)="cerrarMenu()">
+        ← Ver el sitio
+      </a>
+    </div>
+  </aside>
+
+  <!-- Cortina que cierra el menú al tocar fuera, solo en móvil. -->
+  @if (menuAbierto()) {
+    <div class="cortina" (click)="cerrarMenu()"></div>
+  }
+
+  <!-- ── Contenido ── -->
+  <div class="principal">
+
+    <header class="barra">
+      <button class="menu-btn" type="button"
+              [attr.aria-expanded]="menuAbierto()"
+              aria-label="Abrir menú"
+              (click)="alternarMenu()">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="usuario">
+        <div class="datos">
+          <strong>{{ auth.usuario()?.nombreCompleto }}</strong>
+          <small>{{ auth.rolPrincipal() }}</small>
+        </div>
+        <div class="avatar" aria-hidden="true">{{ iniciales() }}</div>
+        <button class="salir" type="button" (click)="salir()">Salir</button>
+      </div>
+    </header>
+
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<app-aviso-inactividad />
