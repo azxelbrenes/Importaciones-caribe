@@ -1,0 +1,121 @@
+<app-encabezado-seccion
+  titulo="Marcas y modelos"
+  descripcion="Estas son las opciones que aparecen al publicar un vehículo y en los filtros del sitio. Agregá solo las marcas que realmente traés." />
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+<div class="columnas">
+
+  <!-- ══════════ MARCAS ══════════ -->
+  <section class="panel">
+    <header class="cabecera-panel">
+      <h2>Marcas</h2>
+      <span class="conteo-panel">{{ marcas().length }}</span>
+    </header>
+
+    <div class="agregar">
+      <input type="text" maxlength="60" placeholder="Ford, Chevrolet, Kia…"
+             [ngModel]="nuevaMarca()"
+             (ngModelChange)="nuevaMarca.set($event)"
+             (keyup.enter)="agregarMarca()">
+
+      <button class="btn-principal" type="button"
+              [disabled]="nuevaMarca().trim().length < 2 || guardandoMarca()"
+              (click)="agregarMarca()">
+        @if (guardandoMarca()) { … } @else { Agregar }
+      </button>
+    </div>
+
+    <!-- El buscador aparece recién con ocho marcas: antes estorba
+         más de lo que ayuda, porque están todas a la vista. -->
+    @if (marcas().length > 8) {
+      <input class="buscador" type="search" placeholder="Buscar marca…"
+             [ngModel]="filtroMarca()"
+             (ngModelChange)="filtroMarca.set($event)">
+    }
+
+    @if (cargandoMarcas()) {
+      <p class="cargando">Cargando…</p>
+    } @else if (marcas().length === 0) {
+      <p class="sin-datos">
+        Todavía no hay marcas. Agregá la primera arriba para poder
+        publicar vehículos.
+      </p>
+    } @else if (marcasFiltradas().length === 0) {
+      <p class="sin-datos">Ninguna marca coincide con la búsqueda.</p>
+    } @else {
+      <ul class="lista">
+        @for (m of marcasFiltradas(); track m.id) {
+          <li>
+            <button type="button"
+                    [class.activa]="marcaActiva()?.id === m.id"
+                    (click)="verModelos(m)">
+              <span class="nombre">
+                {{ m.nombre }}
+                @if (!m.activa) { <em>inactiva</em> }
+              </span>
+              <span class="modelos">
+                {{ m.cantidadModelos }}
+                {{ m.cantidadModelos === 1 ? 'modelo' : 'modelos' }}
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+  <!-- ══════════ MODELOS ══════════ -->
+  <section class="panel">
+    @if (marcaActiva(); as marca) {
+
+      <header class="cabecera-panel">
+        <h2>Modelos de {{ marca.nombre }}</h2>
+        <span class="conteo-panel">{{ modelos().length }}</span>
+      </header>
+
+      <div class="agregar">
+        <input type="text" maxlength="80" placeholder="F-150, Tacoma, Sportage…"
+               [ngModel]="nuevoModelo()"
+               (ngModelChange)="nuevoModelo.set($event)"
+               (keyup.enter)="agregarModelo()">
+
+        <button class="btn-principal" type="button"
+                [disabled]="nuevoModelo().trim().length < 1 || guardandoModelo()"
+                (click)="agregarModelo()">
+          @if (guardandoModelo()) { … } @else { Agregar }
+        </button>
+      </div>
+
+      @if (cargandoModelos()) {
+        <p class="cargando">Cargando…</p>
+      } @else if (modelos().length === 0) {
+        <!-- El mensaje explica la consecuencia, no solo el hecho.
+             Evita que alguien cree diez marcas y después no entienda
+             por qué no puede publicar nada. -->
+        <p class="sin-datos">
+          {{ marca.nombre }} todavía no tiene modelos. Sin al menos uno
+          no se puede publicar un vehículo de esta marca.
+        </p>
+      } @else {
+        <ul class="lista modelos-lista">
+          @for (m of modelos(); track m.id) {
+            <li>
+              <span class="nombre">
+                {{ m.nombre }}
+                @if (!m.activo) { <em>inactivo</em> }
+              </span>
+            </li>
+          }
+        </ul>
+      }
+
+    } @else {
+      <div class="sin-seleccion">
+        <span class="icono" aria-hidden="true">◈</span>
+        <p>Elegí una marca de la izquierda para ver y agregar sus modelos.</p>
+      </div>
+    }
+  </section>
+</div>
