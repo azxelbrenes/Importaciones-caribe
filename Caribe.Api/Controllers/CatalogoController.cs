@@ -15,6 +15,8 @@ public class CatalogoController : ControladorBase
 
     public CatalogoController(ICatalogoLN ln) => _ln = ln;
 
+    // ══════════════════ PUBLICO ══════════════════
+
     [HttpGet("marcas")]
     [AllowAnonymous]
     [EnableRateLimiting("general")]
@@ -39,6 +41,8 @@ public class CatalogoController : ControladorBase
     public IActionResult Opciones(string tipo)
         => Resolver(_ln.ListarOpciones(tipo));
 
+    // ══════════════════ CREAR ══════════════════
+
     [HttpPost("marcas")]
     public async Task<IActionResult> CrearMarca(
         [FromBody] CrearMarcaDto dto, CancellationToken ct)
@@ -48,4 +52,39 @@ public class CatalogoController : ControladorBase
     public async Task<IActionResult> CrearModelo(
         [FromBody] CrearModeloDto dto, CancellationToken ct)
         => ResolverCreado(await _ln.CrearModeloAsync(dto, UsuarioActual, ct));
+
+    // ══════════════════ DESACTIVAR ══════════════════
+
+    [HttpPatch("marcas/{id:int}/estado")]
+    public async Task<IActionResult> ActivarMarca(
+        int id, [FromQuery] bool activa, CancellationToken ct)
+        => Resolver(await _ln.ActivarMarcaAsync(id, activa, UsuarioActual, ct));
+
+    [HttpPatch("modelos/{id:int}/estado")]
+    public async Task<IActionResult> ActivarModelo(
+        int id, [FromQuery] bool activo, CancellationToken ct)
+        => Resolver(await _ln.ActivarModeloAsync(id, activo, UsuarioActual, ct));
+
+    // ══════════════════ ELIMINAR ══════════════════
+    // Solo el propietario: borrar del catalogo es irreversible y
+    // puede afectar el historial si algo sale mal.
+
+    [HttpDelete("marcas/{id:int}")]
+    [Authorize(Roles = Roles.SuperAdministrador)]
+    public async Task<IActionResult> EliminarMarca(int id, CancellationToken ct)
+        => Resolver(await _ln.EliminarMarcaAsync(id, UsuarioActual, ct));
+
+    [HttpDelete("modelos/{id:int}")]
+    [Authorize(Roles = Roles.SuperAdministrador)]
+    public async Task<IActionResult> EliminarModelo(int id, CancellationToken ct)
+        => Resolver(await _ln.EliminarModeloAsync(id, UsuarioActual, ct));
+
+    /// <summary>
+    /// Limpieza de duplicados. Se ejecuta una sola vez y toca muchos
+    /// registros a la vez, asi que es solo del propietario.
+    /// </summary>
+    [HttpPost("limpiar-duplicados")]
+    [Authorize(Roles = Roles.SuperAdministrador)]
+    public async Task<IActionResult> LimpiarDuplicados(CancellationToken ct)
+        => Resolver(await _ln.LimpiarDuplicadosAsync(UsuarioActual, ct));
 }

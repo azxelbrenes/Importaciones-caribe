@@ -1,6 +1,15 @@
 <app-encabezado-seccion
   titulo="Marcas y modelos"
-  descripcion="Estas son las opciones que aparecen al publicar un vehículo y en los filtros del sitio. Agregá solo las marcas que realmente traés." />
+  descripcion="Estas son las opciones que aparecen al publicar un vehículo y en los filtros del sitio. Agregá solo las marcas que realmente traés.">
+
+  @if (puedeEliminar()) {
+    <button class="btn-borde" type="button"
+            [disabled]="limpiando()"
+            (click)="confirmarLimpieza.set(true)">
+      @if (limpiando()) { Limpiando… } @else { Limpiar duplicados }
+    </button>
+  }
+</app-encabezado-seccion>
 
 @if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
 @if (error())   { <p class="nota error">{{ error() }}</p> }
@@ -27,8 +36,8 @@
       </button>
     </div>
 
-    <!-- El buscador aparece recién con ocho marcas: antes estorba
-         más de lo que ayuda, porque están todas a la vista. -->
+    <!-- Aparece recién con ocho marcas: antes estorba, porque están
+         todas a la vista. -->
     @if (marcas().length > 8) {
       <input class="buscador" type="search" placeholder="Buscar marca…"
              [ngModel]="filtroMarca()"
@@ -47,19 +56,44 @@
     } @else {
       <ul class="lista">
         @for (m of marcasFiltradas(); track m.id) {
-          <li>
-            <button type="button"
-                    [class.activa]="marcaActiva()?.id === m.id"
-                    (click)="verModelos(m)">
-              <span class="nombre">
-                {{ m.nombre }}
-                @if (!m.activa) { <em>inactiva</em> }
-              </span>
-              <span class="modelos">
-                {{ m.cantidadModelos }}
-                {{ m.cantidadModelos === 1 ? 'modelo' : 'modelos' }}
-              </span>
-            </button>
+          <li [class.desactivada]="!m.activa">
+            <div class="fila"
+                 [class.activa]="marcaActiva()?.id === m.id"
+                 (click)="verModelos(m)">
+
+              <div class="datos">
+                <span class="nombre">
+                  {{ m.nombre }}
+                  @if (!m.activa) { <em>oculta</em> }
+                </span>
+                <span class="meta">
+                  {{ m.cantidadModelos }}
+                  {{ m.cantidadModelos === 1 ? 'modelo' : 'modelos' }}
+                  @if (m.cantidadVehiculos > 0) {
+                    · {{ m.cantidadVehiculos }}
+                    {{ m.cantidadVehiculos === 1 ? 'vehículo' : 'vehículos' }}
+                  }
+                </span>
+              </div>
+
+              <div class="acciones">
+                <button class="accion" type="button"
+                        [attr.title]="m.activa ? 'Ocultar del catálogo' : 'Volver a mostrar'"
+                        (click)="alternarMarca(m, $event)">
+                  @if (m.activa) { Ocultar } @else { Mostrar }
+                </button>
+
+                <!-- Eliminar solo aparece si NINGÚN vehículo la usa.
+                     Con vehículos asociados, borrarla rompería el
+                     catálogo: la vía correcta es ocultar. -->
+                @if (puedeEliminar() && m.cantidadVehiculos === 0) {
+                  <button class="accion borrar" type="button" title="Eliminar"
+                          (click)="pedirEliminarMarca(m, $event)">
+                    Eliminar
+                  </button>
+                }
+              </div>
+            </div>
           </li>
         }
       </ul>
@@ -91,21 +125,45 @@
       @if (cargandoModelos()) {
         <p class="cargando">Cargando…</p>
       } @else if (modelos().length === 0) {
-        <!-- El mensaje explica la consecuencia, no solo el hecho.
-             Evita que alguien cree diez marcas y después no entienda
-             por qué no puede publicar nada. -->
+        <!-- Explica la consecuencia, no solo el hecho: evita que
+             alguien cree diez marcas y después no entienda por qué no
+             puede publicar nada. -->
         <p class="sin-datos">
           {{ marca.nombre }} todavía no tiene modelos. Sin al menos uno
           no se puede publicar un vehículo de esta marca.
         </p>
       } @else {
-        <ul class="lista modelos-lista">
+        <ul class="lista">
           @for (m of modelos(); track m.id) {
-            <li>
-              <span class="nombre">
-                {{ m.nombre }}
-                @if (!m.activo) { <em>inactivo</em> }
-              </span>
+            <li [class.desactivada]="!m.activo">
+              <div class="fila sin-hover">
+                <div class="datos">
+                  <span class="nombre">
+                    {{ m.nombre }}
+                    @if (!m.activo) { <em>oculto</em> }
+                  </span>
+                  @if (m.cantidadVehiculos > 0) {
+                    <span class="meta">
+                      {{ m.cantidadVehiculos }}
+                      {{ m.cantidadVehiculos === 1 ? 'vehículo' : 'vehículos' }}
+                    </span>
+                  }
+                </div>
+
+                <div class="acciones">
+                  <button class="accion" type="button"
+                          (click)="alternarModelo(m)">
+                    @if (m.activo) { Ocultar } @else { Mostrar }
+                  </button>
+
+                  @if (puedeEliminar() && m.cantidadVehiculos === 0) {
+                    <button class="accion borrar" type="button"
+                            (click)="modeloAEliminar.set(m)">
+                      Eliminar
+                    </button>
+                  }
+                </div>
+              </div>
             </li>
           }
         </ul>
@@ -119,3 +177,39 @@
     }
   </section>
 </div>
+
+<!-- ══════════ CONFIRMACIONES ══════════ -->
+
+@if (marcaAEliminar(); as m) {
+  <app-confirmar
+    titulo="Eliminar marca"
+    [mensaje]="'Se eliminará ' + m.nombre + ' junto con sus ' +
+               m.cantidadModelos + ' modelos. Ningún vehículo la usa, ' +
+               'así que no se pierde nada del catálogo.'"
+    textoAceptar="Eliminar"
+    palabraClave="ELIMINAR"
+    (confirmar)="confirmarEliminarMarca()"
+    (cancelar)="marcaAEliminar.set(null)" />
+}
+
+@if (modeloAEliminar(); as m) {
+  <app-confirmar
+    titulo="Eliminar modelo"
+    [mensaje]="'Se eliminará ' + m.nombre + ' de ' + m.marca +
+               '. Ningún vehículo lo usa.'"
+    textoAceptar="Eliminar"
+    (confirmar)="confirmarEliminarModelo()"
+    (cancelar)="modeloAEliminar.set(null)" />
+}
+
+@if (confirmarLimpieza()) {
+  <app-confirmar
+    titulo="Limpiar duplicados"
+    mensaje="Se van a unir las marcas y modelos que quedaron repetidos
+             por espacios de más, y se corregirán los nombres. Los
+             vehículos de los registros repetidos se reasignan al que
+             se conserva, así que ninguno queda suelto."
+    textoAceptar="Limpiar"
+    (confirmar)="ejecutarLimpieza()"
+    (cancelar)="confirmarLimpieza.set(false)" />
+}

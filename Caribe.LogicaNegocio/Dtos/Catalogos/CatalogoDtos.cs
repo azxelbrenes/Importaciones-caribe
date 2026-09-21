@@ -6,7 +6,13 @@ public record MarcaDto(
     int Id,
     string Nombre,
     bool Activa,
-    int CantidadModelos
+    int CantidadModelos,
+
+    /// <summary>
+    /// Cuantos vehiculos la usan. Con esto el panel sabe si ofrecer
+    /// eliminar o solo desactivar, sin una llamada aparte.
+    /// </summary>
+    int CantidadVehiculos
 );
 
 public record ModeloDto(
@@ -14,7 +20,8 @@ public record ModeloDto(
     int MarcaId,
     string Marca,
     string Nombre,
-    bool Activo
+    bool Activo,
+    int CantidadVehiculos
 );
 
 public class CrearMarcaDto
@@ -33,9 +40,17 @@ public class CrearModeloDto
 }
 
 /// <summary>
-/// Opcion de un desplegable. Angular las consume de aqui para que los
-/// textos no esten duplicados en dos lugares: si el backend dice
-/// "En tránsito" y el frontend "En transito", el cliente pregunta si
-/// son estados distintos.
+/// Resultado de la limpieza de duplicados. Se muestra al terminar
+/// para que la persona sepa que se toco.
+/// </summary>
+public record LimpiezaDto(
+    int MarcasFusionadas,
+    int ModelosFusionados,
+    int NombresCorregidos
+);
+
+/// <summary>
+/// Opcion de un desplegable. Angular las consume de aqui para que
+/// los textos no esten duplicados en dos lugares.
 /// </summary>
 public record OpcionDto(short Valor, string Texto);

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Marca, Modelo, Opcion } from '../models/catalogo.model';
+import { Limpieza, Marca, Modelo, Opcion } from '../models/catalogo.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogoService {
@@ -32,8 +32,34 @@ export class CatalogoService {
     return this.http.post<number>(`${this.base}/modelos`, { marcaId, nombre });
   }
 
-  /// tipo: transmision · combustible · traccion · estado ·
-  ///       estadosolicitud · formapago
+  // ── Desactivar ──
+
+  activarMarca(id: number, activa: boolean): Observable<boolean> {
+    return this.http.patch<boolean>(
+      `${this.base}/marcas/${id}/estado?activa=${activa}`, {});
+  }
+
+  activarModelo(id: number, activo: boolean): Observable<boolean> {
+    return this.http.patch<boolean>(
+      `${this.base}/modelos/${id}/estado?activo=${activo}`, {});
+  }
+
+  // ── Eliminar ──
+
+  eliminarMarca(id: number): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.base}/marcas/${id}`);
+  }
+
+  eliminarModelo(id: number): Observable<boolean> {
+    return this.http.delete<boolean>(`${this.base}/modelos/${id}`);
+  }
+
+  limpiarDuplicados(): Observable<Limpieza> {
+    return this.http.post<Limpieza>(`${this.base}/limpiar-duplicados`, {});
+  }
+
+  // ── Opciones ──
+
   opciones(tipo: string): Observable<Opcion[]> {
     return this.http.get<Opcion[]>(`${this.base}/opciones/${tipo}`);
   }

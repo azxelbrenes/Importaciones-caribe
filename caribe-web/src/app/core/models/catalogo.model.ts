@@ -3,6 +3,10 @@ export interface Marca {
   nombre: string;
   activa: boolean;
   cantidadModelos: number;
+
+  /// Cuantos vehiculos la usan. Si es mayor a cero, no se puede
+  /// eliminar: solo desactivar.
+  cantidadVehiculos: number;
 }
 
 export interface Modelo {
@@ -11,11 +15,17 @@ export interface Modelo {
   marca: string;
   nombre: string;
   activo: boolean;
+  cantidadVehiculos: number;
+}
+
+export interface Limpieza {
+  marcasFusionadas: number;
+  modelosFusionados: number;
+  nombresCorregidos: number;
 }
 
 /// Opcion de un desplegable. Viene del backend para que los textos
-/// vivan en un solo lugar: si el servidor dice "En tránsito" y el
-/// frontend "En transito", el cliente pregunta si son cosas distintas.
+/// vivan en un solo lugar.
 export interface Opcion {
   valor: number;
   texto: string;
