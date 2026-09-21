@@ -27,10 +27,17 @@ public class AlmacenamientoR2 : IAlmacenamiento
 
         await _s3.PutObjectAsync(new PutObjectRequest
         {
-            BucketName  = _op.Bucket,
-            Key         = rutaRelativa,
+            BucketName = _op.Bucket,
+            Key = rutaRelativa,
             InputStream = contenido,
             ContentType = contentType,
+
+            // R2 no acepta la subida firmada por fragmentos que el SDK
+            // de AWS usa por defecto desde 2025. Sin esto, toda subida
+            // falla con "STREAMING-AWS4-HMAC-SHA256-PAYLOAD-TRAILER not
+            // implemented". La conexion sigue siendo HTTPS: se firma
+            // la peticion completa, solo no cada fragmento.
+            DisablePayloadSigning = true,
 
             // Un ano de cache: cada foto tiene nombre unico, asi que
             // una URL nunca va a apuntar a otro contenido. Sin esto,

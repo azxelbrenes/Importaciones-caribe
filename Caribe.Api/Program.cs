@@ -82,13 +82,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     {
         o.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer           = true,
-            ValidateAudience         = true,
-            ValidateLifetime         = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer              = jwt.Issuer,
-            ValidAudience            = jwt.Audience,
-            IssuerSigningKey         = new SymmetricSecurityKey(
+            ValidIssuer = jwt.Issuer,
+            ValidAudience = jwt.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
                                            Encoding.UTF8.GetBytes(jwt.Key)),
 
             // Por defecto .NET tolera 5 minutos de desfase. Para
@@ -126,7 +126,14 @@ if (r2.EstaConfigurado)
                 ForcePathStyle = true,
 
                 // R2 ignora la region pero el SDK exige una.
-                AuthenticationRegion = "auto"
+                AuthenticationRegion = "auto",
+
+                // Desde 2025 el SDK de AWS agrega verificaciones de
+                // integridad que R2 todavia no soporta. Con esto solo
+                // se envian cuando la operacion las exige de verdad.
+                // Sin estas dos lineas, toda subida de fotos falla.
+                RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+                ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
             }));
 
     builder.Services.AddScoped<IAlmacenamiento, AlmacenamientoR2>();
