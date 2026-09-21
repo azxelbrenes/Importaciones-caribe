@@ -1,0 +1,234 @@
+<app-encabezado-seccion
+  titulo="Vehículos"
+  descripcion="Publicá, editá y gestioná el catálogo. Los costos y el margen solo se ven acá.">
+  <a class="btn-principal" routerLink="/admin/vehiculos/nuevo">+ Nuevo vehículo</a>
+</app-encabezado-seccion>
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+@if (sinFotos() > 0) {
+  <p class="nota alerta">
+    {{ sinFotos() }}
+    {{ sinFotos() === 1 ? 'borrador no tiene' : 'borradores no tienen' }}
+    fotografías. Sin al menos una no se pueden publicar.
+  </p>
+}
+
+<!-- ── Filtros ── -->
+<div class="filtros">
+  <div class="campo busqueda">
+    <label for="v-buscar">Buscar</label>
+    <input id="v-buscar" type="search" placeholder="Marca, modelo o color…"
+           [ngModel]="busqueda()"
+           (ngModelChange)="busqueda.set($event); buscarConEspera()">
+  </div>
+
+  <div class="campo">
+    <label for="v-estado">Estado</label>
+    <select id="v-estado"
+            [ngModel]="filtroEstado()"
+            (ngModelChange)="filtroEstado.set($event); filtrar()">
+      <option [ngValue]="null">Todos</option>
+      @for (e of [0,1,2,3,4,5]; track e) {
+        <option [ngValue]="e">{{ etiquetas[e] }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="v-marca">Marca</label>
+    <select id="v-marca"
+            [ngModel]="filtroMarca()"
+            (ngModelChange)="filtroMarca.set($event); filtrar()">
+      <option [ngValue]="null">Todas</option>
+      @for (m of marcas(); track m.id) {
+        <option [ngValue]="m.id">{{ m.nombre }}</option>
+      }
+    </select>
+  </div>
+
+  <label class="casilla">
+    <input type="checkbox"
+           [ngModel]="soloFinanciables()"
+           (ngModelChange)="soloFinanciables.set($event); filtrar()">
+    <span>Solo con financiamiento</span>
+  </label>
+
+  @if (hayFiltros()) {
+    <button class="btn-borde" type="button" (click)="limpiarFiltros()">Limpiar</button>
+  }
+</div>
+
+@if (cargando()) {
+  <div class="esqueleto">
+    @for (i of [1,2,3,4,5]; track i) { <div class="fila"></div> }
+  </div>
+
+} @else if (vehiculos().length === 0) {
+
+  <div class="vacio">
+    @if (hayFiltros()) {
+      <p class="titulo">Ningún vehículo coincide</p>
+      <p>Probá con otros filtros.</p>
+    } @else {
+      <p class="titulo">Todavía no hay vehículos</p>
+      <p>Publicá el primero para que aparezca en el catálogo del sitio.</p>
+      <a class="btn-principal" routerLink="/admin/vehiculos/nuevo">+ Nuevo vehículo</a>
+    }
+  </div>
+
+} @else {
+
+  <!-- ── Tabla, en pantallas grandes ── -->
+  <div class="tabla-envoltura">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Vehículo</th>
+          <th class="num">Costo</th>
+          <th class="num">Precio</th>
+          <th class="num">Margen</th>
+          <th>Estado</th>
+          <th class="num">Fotos</th>
+          <th class="num">Visitas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (v of vehiculos(); track v.id) {
+          <tr>
+            <td>
+              <div class="veh">
+                <strong>{{ v.marca }} {{ v.modelo }}</strong>
+                <small>
+                  {{ v.anio }} · {{ v.kilometraje | number }} km
+                  @if (v.color) { · {{ v.color }} }
+                </small>
+                <div class="insignias">
+                  @if (v.destacado) { <span class="insignia azul">Destacado</span> }
+                  @if (v.aceptaFinanciamiento) { <span class="insignia verde">Financiable</span> }
+                </div>
+              </div>
+            </td>
+
+            <td class="num mono">{{ v.costoTotal | currency:'USD':'symbol':'1.0-0' }}</td>
+            <td class="num mono fuerte">{{ v.precioPublicado | currency:'USD':'symbol':'1.0-0' }}</td>
+
+            <td class="num mono margen">
+              {{ v.margen | currency:'USD':'symbol':'1.0-0' }}
+              <small [class.bajo]="porcentajeMargen(v) < 5">
+                {{ porcentajeMargen(v) | number:'1.0-1' }}%
+              </small>
+            </td>
+
+            <td>
+              <span class="pastilla" [class]="clases[v.estado]">
+                {{ etiquetas[v.estado] }}
+              </span>
+            </td>
+
+            <!-- Sin fotos no se puede publicar: se marca desde la lista
+                 en vez de esperar a que falle el cambio de estado. -->
+            <td class="num mono" [class.alerta]="v.cantidadFotos === 0">
+              {{ v.cantidadFotos }}
+            </td>
+
+            <td class="num mono">{{ v.visitas | number }}</td>
+
+            <td>
+              <div class="acciones">
+                <a class="btn-borde" [routerLink]="['/admin/vehiculos', v.id]">Editar</a>
+
+                @if (transicionesDe(v.estado).length > 0) {
+                  <select class="estado-sel"
+                          [disabled]="cambiandoEstado() === v.id"
+                          (change)="cambiarEstado(v, $event)">
+                    <option value="">Cambiar a…</option>
+                    @for (e of transicionesDe(v.estado); track e) {
+                      <option [value]="e">{{ etiquetas[e] }}</option>
+                    }
+                  </select>
+                }
+
+                @if (puedeEliminar() && v.estado !== 4) {
+                  <button class="btn-peligro" type="button" (click)="aEliminar.set(v)">
+                    Eliminar
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Tarjetas, en móvil ── -->
+  <div class="tarjetas">
+    @for (v of vehiculos(); track v.id) {
+      <article class="tarjeta">
+        <header>
+          <div>
+            <strong>{{ v.marca }} {{ v.modelo }}</strong>
+            <small>{{ v.anio }} · {{ v.kilometraje | number }} km</small>
+          </div>
+          <span class="pastilla" [class]="clases[v.estado]">
+            {{ etiquetas[v.estado] }}
+          </span>
+        </header>
+
+        <dl>
+          <div><dt>Precio</dt><dd class="fuerte">{{ v.precioPublicado | currency:'USD':'symbol':'1.0-0' }}</dd></div>
+          <div><dt>Margen</dt><dd class="margen">{{ v.margen | currency:'USD':'symbol':'1.0-0' }}</dd></div>
+          <div><dt>Fotos</dt><dd [class.alerta]="v.cantidadFotos === 0">{{ v.cantidadFotos }}</dd></div>
+          <div><dt>Visitas</dt><dd>{{ v.visitas | number }}</dd></div>
+        </dl>
+
+        <div class="acciones">
+          <a class="btn-borde" [routerLink]="['/admin/vehiculos', v.id]">Editar</a>
+
+          @if (transicionesDe(v.estado).length > 0) {
+            <select class="estado-sel"
+                    [disabled]="cambiandoEstado() === v.id"
+                    (change)="cambiarEstado(v, $event)">
+              <option value="">Cambiar a…</option>
+              @for (e of transicionesDe(v.estado); track e) {
+                <option [value]="e">{{ etiquetas[e] }}</option>
+              }
+            </select>
+          }
+
+          @if (puedeEliminar() && v.estado !== 4) {
+            <button class="btn-peligro" type="button" (click)="aEliminar.set(v)">
+              Eliminar
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion">
+      <button type="button" [disabled]="pagina() === 1"
+              (click)="irAPagina(pagina() - 1)">Anterior</button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button type="button" [disabled]="pagina() === totalPaginas()"
+              (click)="irAPagina(pagina() + 1)">Siguiente</button>
+    </nav>
+  }
+
+  <p class="conteo">{{ total() }} {{ total() === 1 ? 'vehículo' : 'vehículos' }}</p>
+}
+
+@if (aEliminar(); as v) {
+  <app-confirmar
+    titulo="Eliminar vehículo"
+    [mensaje]="'Se eliminará ' + v.marca + ' ' + v.modelo + ' ' + v.anio +
+               ' junto con sus fotografías. Las solicitudes que lo mencionan se conservan.'"
+    textoAceptar="Eliminar"
+    palabraClave="ELIMINAR"
+    (confirmar)="confirmarEliminar()"
+    (cancelar)="aEliminar.set(null)" />
+}

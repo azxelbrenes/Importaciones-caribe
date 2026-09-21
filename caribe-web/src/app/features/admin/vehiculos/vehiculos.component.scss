@@ -1,0 +1,172 @@
+@use '../../../../styles/panel';
+
+// ── Filtros ──
+
+.filtros {
+  grid-template-columns: 2fr 1fr 1fr auto auto;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr 1fr;
+    .busqueda { grid-column: 1 / -1; }
+  }
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--blue);
+    cursor: pointer;
+  }
+}
+
+.filtros .btn-borde { height: 44px; }
+
+// ── Tabla ──
+// Bajo 1000px la tabla se cambia por tarjetas: ocho columnas en un
+// celular obligan a desplazar de lado y se vuelve inusable. Y el
+// dueño va a revisar esto desde el teléfono.
+
+.tabla-envoltura {
+  @media (max-width: 1000px) { display: none; }
+}
+
+.veh {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 190px;
+
+  strong { font-size: 14px; font-weight: 600; }
+  small { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+}
+
+.insignias {
+  display: flex;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.insignia {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border: 1px solid;
+
+  &.azul  { color: var(--blue); border-color: rgba(21, 128, 232, .4); }
+  &.verde { color: var(--ok);   border-color: rgba(31, 169, 127, .4); }
+}
+
+.margen {
+  color: var(--ok);
+
+  small {
+    display: block;
+    font-size: 10.5px;
+    color: var(--dim);
+    margin-top: 2px;
+
+    // Bajo 5% casi siempre significa que falta cargar un costo, no
+    // que se decidió vender casi al costo.
+    &.bajo { color: var(--warn); }
+  }
+}
+
+.alerta { color: var(--warn); font-weight: 600; }
+
+.acciones {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.estado-sel {
+  width: auto;
+  max-width: 130px;
+  padding: 7px 28px 7px 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: #A9B7C5;
+  background-position: right 7px center;
+  background-size: 13px;
+}
+
+// ── Tarjetas en móvil ──
+
+.tarjetas {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+
+  @media (max-width: 1000px) { display: flex; }
+}
+
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px;
+
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+
+    strong { display: block; font-size: 15px; font-weight: 600; }
+
+    small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 3px;
+    }
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 0 0 14px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+
+    @media (max-width: 460px) { grid-template-columns: repeat(2, 1fr); }
+
+    dt {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    dd {
+      font-family: var(--mono);
+      font-size: 13.5px;
+      margin: 4px 0 0;
+
+      &.fuerte { font-weight: 600; }
+      &.margen { color: var(--ok); }
+    }
+  }
+}
+
+.vacio .btn-principal {
+  display: inline-block;
+  margin-top: 18px;
+}
