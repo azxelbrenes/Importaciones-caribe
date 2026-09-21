@@ -1,0 +1,283 @@
+<app-encabezado-seccion
+  [titulo]="esNuevo() ? 'Nuevo vehículo' : 'Editar vehículo'"
+  descripcion="El precio se calcula solo a partir de los costos. Los costos y tu ganancia nunca salen al sitio público.">
+  <a class="volver" routerLink="/admin/vehiculos">← Volver a la lista</a>
+</app-encabezado-seccion>
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+@if (cargando()) {
+  <p class="cargando">Cargando…</p>
+} @else {
+
+  <div class="disposicion">
+
+    <!-- ══════════ FORMULARIO ══════════ -->
+    <div class="columna">
+
+      <section class="panel">
+        <h2>Datos del vehículo</h2>
+
+        <div class="campos">
+          <div class="campo">
+            <label for="f-marca">Marca <span>*</span></label>
+            <select id="f-marca"
+                    [ngModel]="marcaId()"
+                    (ngModelChange)="alCambiarMarca($event)">
+              <option [ngValue]="null">Seleccioná una marca</option>
+              @for (m of marcas(); track m.id) {
+                <option [ngValue]="m.id">{{ m.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-modelo">Modelo <span>*</span></label>
+            <select id="f-modelo"
+                    [disabled]="marcaId() === null"
+                    [ngModel]="modeloId()"
+                    (ngModelChange)="cambiar(modeloId, $event)">
+              <option [ngValue]="null">
+                @if (marcaId() === null) { Elegí una marca primero }
+                @else { Seleccioná un modelo }
+              </option>
+              @for (m of modelos(); track m.id) {
+                <option [ngValue]="m.id">{{ m.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-anio">Año</label>
+            <select id="f-anio" [ngModel]="anio()" (ngModelChange)="cambiar(anio, $event)">
+              @for (a of anios; track a) {
+                <option [ngValue]="a">{{ a }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-km">Kilometraje</label>
+            <input id="f-km" type="number" inputmode="numeric" min="0" step="500"
+                   [ngModel]="kilometraje()" (ngModelChange)="cambiar(kilometraje, $event)">
+          </div>
+
+          <div class="campo">
+            <label for="f-trans">Transmisión</label>
+            <select id="f-trans" [ngModel]="transmision()"
+                    (ngModelChange)="cambiar(transmision, $event)">
+              @for (o of transmisiones(); track o.valor) {
+                <option [ngValue]="o.valor">{{ o.texto }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-comb">Combustible</label>
+            <select id="f-comb" [ngModel]="combustible()"
+                    (ngModelChange)="cambiar(combustible, $event)">
+              @for (o of combustibles(); track o.valor) {
+                <option [ngValue]="o.valor">{{ o.texto }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-trac">Tracción</label>
+            <select id="f-trac" [ngModel]="traccion()"
+                    (ngModelChange)="cambiar(traccion, $event)">
+              @for (o of tracciones(); track o.valor) {
+                <option [ngValue]="o.valor">{{ o.texto }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="f-color">Color</label>
+            <input id="f-color" type="text" maxlength="40" placeholder="Blanco, Negro…"
+                   [ngModel]="color()" (ngModelChange)="cambiar(color, $event)">
+          </div>
+
+          <div class="campo ancho">
+            <label for="f-desc">Descripción</label>
+            <textarea id="f-desc" rows="4" maxlength="4000"
+                      placeholder="Equipamiento, estado, historial…"
+                      [ngModel]="descripcion()"
+                      (ngModelChange)="cambiar(descripcion, $event)"></textarea>
+            <small>{{ descripcion().length }} / 4000</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Costos</h2>
+        <p class="ayuda">
+          Son internos. El sitio muestra el total y el desglose, pero tu
+          honorario va sumado dentro de "Trámites" y nunca aparece solo.
+        </p>
+
+        <div class="campos">
+          <div class="campo">
+            <label for="c-veh">Vehículo en EE. UU. <span>*</span></label>
+            <input id="c-veh" type="number" inputmode="decimal" min="0" step="100"
+                   [ngModel]="costoVehiculo()" (ngModelChange)="cambiar(costoVehiculo, $event)">
+          </div>
+
+          <div class="campo">
+            <label for="c-flete">Flete y transporte</label>
+            <input id="c-flete" type="number" inputmode="decimal" min="0" step="100"
+                   [ngModel]="costoFlete()" (ngModelChange)="cambiar(costoFlete, $event)">
+          </div>
+
+          <div class="campo">
+            <label for="c-imp">Impuestos y nacionalización</label>
+            <input id="c-imp" type="number" inputmode="decimal" min="0" step="100"
+                   [ngModel]="costoImpuestos()" (ngModelChange)="cambiar(costoImpuestos, $event)">
+          </div>
+
+          <div class="campo">
+            <label for="c-tram">Trámites y RTV</label>
+            <input id="c-tram" type="number" inputmode="decimal" min="0" step="50"
+                   [ngModel]="costoTramites()" (ngModelChange)="cambiar(costoTramites, $event)">
+          </div>
+
+          <!-- El honorario se distingue: es el único campo que define
+               la ganancia, y el que nunca debe confundirse con un
+               costo más. -->
+          <div class="campo ancho honorario">
+            <label for="c-hon">Tu honorario <span>*</span></label>
+            <input id="c-hon" type="number" inputmode="decimal" min="0" step="100"
+                   [ngModel]="honorario()" (ngModelChange)="cambiar(honorario, $event)">
+            <small>Es tu ganancia. No se muestra por separado en el sitio.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Publicación</h2>
+
+        <div class="campos">
+          <div class="campo">
+            <label for="f-vig">Vigencia del precio (días)</label>
+            <input id="f-vig" type="number" min="1" max="90"
+                   [ngModel]="vigenciaDias()" (ngModelChange)="cambiar(vigenciaDias, $event)">
+            <small>
+              Se muestra como plazo de la cotización. Los avalúos de
+              Hacienda cambian, y un precio publicado es una oferta.
+            </small>
+          </div>
+
+          <div class="campo ancho">
+            <label class="casilla">
+              <input type="checkbox"
+                     [ngModel]="destacado()" (ngModelChange)="cambiar(destacado, $event)">
+              <span>
+                <strong>Destacado</strong>
+                Aparece en el inicio del sitio, junto al titular principal.
+              </span>
+            </label>
+          </div>
+
+          <div class="campo ancho">
+            <label class="casilla">
+              <input type="checkbox"
+                     [ngModel]="aceptaFinanciamiento()"
+                     (ngModelChange)="cambiar(aceptaFinanciamiento, $event)">
+              <span>
+                <strong>Acepta financiamiento</strong>
+                Muestra en la ficha las cuotas con 50% de prima, si el
+                financiamiento está activo en la configuración.
+              </span>
+            </label>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════ RESUMEN ══════════ -->
+    <aside class="lateral">
+      <!-- Pegajoso: al bajar por el formulario, el precio y el margen
+           quedan siempre a la vista. -->
+      <div class="resumen">
+        <p class="etq">Precio al público</p>
+        <strong class="precio">{{ precio() | currency:'USD':'symbol':'1.0-0' }}</strong>
+
+        <dl>
+          <div>
+            <dt>Costo total</dt>
+            <dd>{{ costoTotal() | currency:'USD':'symbol':'1.0-0' }}</dd>
+          </div>
+          <div>
+            <dt>Tu ganancia</dt>
+            <dd class="ganancia">{{ honorario() | currency:'USD':'symbol':'1.0-0' }}</dd>
+          </div>
+          <div>
+            <dt>Margen</dt>
+            <dd [class.bajo]="porcentajeMargen() > 0 && porcentajeMargen() < 5">
+              {{ porcentajeMargen() | number:'1.0-1' }}%
+            </dd>
+          </div>
+        </dl>
+
+        <!-- No bloquea, solo avisa: un margen de 2% casi siempre
+             significa que falta un costo, no que se decidió vender
+             casi al costo. -->
+        @if (porcentajeMargen() > 0 && porcentajeMargen() < 5) {
+          <p class="aviso">Margen bajo. Revisá que los costos estén completos.</p>
+        }
+
+        @if (aceptaFinanciamiento()) {
+          <div class="financiamiento">
+            <p class="etq">Así se ve en la ficha</p>
+
+            @if (simulacion(); as s) {
+              <p class="prima">
+                Prima {{ s.prima | currency:'USD':'symbol':'1.0-0' }}
+              </p>
+              <ul>
+                @for (o of s.opciones; track o.plazoMeses) {
+                  <li>
+                    <span>{{ o.plazoMeses }} meses</span>
+                    <strong>{{ o.cuotaMensual | currency:'USD':'symbol':'1.0-0' }}/mes</strong>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="apagado">
+                El financiamiento está apagado en la configuración. La
+                casilla queda marcada y las cuotas aparecen cuando se
+                active.
+              </p>
+            }
+          </div>
+        }
+
+        <button class="btn-principal guardar" type="button"
+                [disabled]="!valido() || guardando()"
+                (click)="guardar()">
+          @if (guardando()) { Guardando… }
+          @else if (esNuevo()) { Crear vehículo }
+          @else { Guardar cambios }
+        </button>
+
+        @if (!valido()) {
+          <p class="requisitos">Falta: {{ faltantes().join(', ') }}.</p>
+        } @else if (sucio()) {
+          <p class="requisitos pendiente">Hay cambios sin guardar.</p>
+        }
+      </div>
+    </aside>
+  </div>
+
+  <!-- Las fotos necesitan un vehículo guardado al que asociarse. -->
+  @if (id(); as vehiculoId) {
+    <div class="fotos-zona">
+      <app-fotos [vehiculoId]="vehiculoId" />
+    </div>
+  } @else {
+    <div class="fotos-pendiente">
+      <p>Guardá el vehículo para poder subir las fotografías.</p>
+    </div>
+  }
+}

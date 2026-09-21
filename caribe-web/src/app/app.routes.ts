@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, rolGuard } from './core/auth/auth.guard';
+import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 import { ROLES_ATENCION, ROLES_GESTION, Roles } from './core/auth/auth.model';
 
 export const routes: Routes = [
@@ -45,10 +46,32 @@ export const routes: Routes = [
             .then(m => m.VehiculosComponent),
         title: 'Vehículos · Panel'
       },
+      {
+        // "nuevo" va ANTES que ":id": Angular evalúa en orden y el
+        // parámetro captura cualquier valor, incluido el texto "nuevo".
+        path: 'vehiculos/nuevo',
+        canActivate: [rolGuard],
+        canDeactivate: [cambiosSinGuardarGuard],
+        data: { roles: ROLES_GESTION },
+        loadComponent: () =>
+          import('./features/admin/vehiculos/formulario/formulario.component')
+            .then(m => m.VehiculoFormularioComponent),
+        title: 'Nuevo vehículo · Panel'
+      },
+      {
+        path: 'vehiculos/:id',
+        canActivate: [rolGuard],
+        canDeactivate: [cambiosSinGuardarGuard],
+        data: { roles: ROLES_GESTION },
+        loadComponent: () =>
+          import('./features/admin/vehiculos/formulario/formulario.component')
+            .then(m => m.VehiculoFormularioComponent),
+        title: 'Editar vehículo · Panel'
+      },
 
       // ── Solicitudes ──
-      // Atención incluye al Operador: la persona que atiende clientes
-      // no necesita ver vehículos ni márgenes.
+      // Atención incluye al Operador: quien atiende clientes no
+      // necesita ver vehículos ni márgenes.
       {
         path: 'solicitudes',
         canActivate: [rolGuard],
@@ -94,8 +117,7 @@ export const routes: Routes = [
 
       // ── Mi cuenta ──
       // Sin rolGuard a propósito: cualquier rol autenticado debe poder
-      // ver su cuenta y activar la verificación en dos pasos. Un
-      // operador sin acceso a esa pantalla nunca podría protegerse.
+      // activar la verificación en dos pasos.
       {
         path: 'cuenta',
         loadComponent: () =>
@@ -109,7 +131,6 @@ export const routes: Routes = [
   // Provisional mientras se construye el sitio público.
   { path: '', redirectTo: 'admin/login', pathMatch: 'full' },
 
-  // El comodín SIEMPRE al final: captura todo lo que no coincidió
-  // antes, así que cualquier ruta escrita después nunca se alcanza.
+  // El comodín SIEMPRE al final.
   { path: '**', redirectTo: 'admin/login' }
 ];

@@ -1,0 +1,86 @@
+<section class="panel fotos">
+  <header>
+    <h2>Fotografías</h2>
+    <p>
+      La portada es la que sale en el catálogo. Las fotos se procesan
+      solas: se ajustan de tamaño y se les quitan los datos de ubicación.
+    </p>
+  </header>
+
+  @if (error()) {
+    <p class="nota error">{{ error() }}</p>
+  }
+
+  @if (puedeSubir()) {
+    <label class="zona"
+           [class.activa]="arrastrando()"
+           [class.ocupada]="subiendo()"
+           (dragover)="alArrastrar($event)"
+           (dragleave)="alSalir($event)"
+           (drop)="alSoltar($event)">
+
+      <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden
+             [disabled]="subiendo()"
+             (change)="alSeleccionar($event)">
+
+      @if (subiendo()) {
+        <span class="icono">↑</span>
+        <span class="titulo">Subiendo… {{ progreso() }}%</span>
+        <div class="barra"><div class="relleno" [style.width.%]="progreso()"></div></div>
+      } @else {
+        <span class="icono">＋</span>
+        <span class="titulo">Arrastrá fotos o tocá para elegir</span>
+        <span class="ayuda">
+          JPG, PNG o WebP · hasta 10 MB cada una · quedan {{ restantes() }}
+        </span>
+      }
+    </label>
+  } @else {
+    <p class="nota alerta">
+      Llegaste al máximo de {{ MAXIMO }} fotografías. Eliminá alguna para
+      agregar otra.
+    </p>
+  }
+
+  @if (cargando()) {
+    <p class="cargando">Cargando fotografías…</p>
+  } @else if (fotos().length === 0) {
+    <p class="sin-fotos">
+      Todavía no hay fotografías. Sin al menos una, el vehículo no se
+      puede publicar.
+    </p>
+  } @else {
+    <div class="rejilla">
+      @for (f of fotos(); track f.id; let i = $index; let ultima = $last) {
+        <figure class="foto" [class.portada]="f.esPortada">
+          <img [src]="f.urlThumb" [alt]="'Fotografía ' + (i + 1)" loading="lazy">
+
+          @if (f.esPortada) {
+            <span class="etiqueta">Portada</span>
+          }
+
+          <figcaption>
+            <div class="orden">
+              <button type="button" [disabled]="i === 0"
+                      aria-label="Mover antes" (click)="mover(i, -1)">←</button>
+              <span>{{ i + 1 }}</span>
+              <button type="button" [disabled]="ultima"
+                      aria-label="Mover después" (click)="mover(i, 1)">→</button>
+            </div>
+
+            <div class="acciones">
+              @if (!f.esPortada) {
+                <button type="button" class="btn-borde" (click)="marcarPortada(f)">
+                  Portada
+                </button>
+              }
+              <button type="button" class="btn-peligro" (click)="eliminar(f)">
+                Eliminar
+              </button>
+            </div>
+          </figcaption>
+        </figure>
+      }
+    </div>
+  }
+</section>

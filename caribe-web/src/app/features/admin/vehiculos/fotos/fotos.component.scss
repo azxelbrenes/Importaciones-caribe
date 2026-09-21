@@ -1,0 +1,161 @@
+@use '../../../../../styles/panel';
+
+.fotos {
+  header { margin-bottom: 18px; }
+
+  h2 {
+    font-family: var(--disp);
+    font-size: 19px;
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1;
+    margin: 0 0 8px;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+    max-width: 62ch;
+  }
+}
+
+.zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 30px 20px;
+  border: 1px dashed var(--line2);
+  background: rgba(255, 255, 255, .015);
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  margin-bottom: 18px;
+
+  &:hover:not(.ocupada) { border-color: var(--blue); }
+
+  // Al arrastrar encima, el área se resalta: sin esa señal no queda
+  // claro que soltar ahí va a funcionar.
+  &.activa {
+    border-color: var(--blue);
+    background: rgba(21, 128, 232, .07);
+  }
+
+  &.ocupada { cursor: wait; }
+
+  .icono { font-size: 22px; color: var(--blue); line-height: 1; }
+
+  .titulo {
+    font-family: var(--disp);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+
+  .ayuda {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--dim);
+    text-align: center;
+  }
+
+  .barra {
+    width: 100%;
+    max-width: 280px;
+    height: 4px;
+    background: var(--raise);
+    margin-top: 8px;
+
+    .relleno { height: 100%; background: var(--blue); transition: width .2s; }
+  }
+}
+
+.sin-fotos {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.foto {
+  margin: 0;
+  border: 1px solid var(--line2);
+  background: #070A0E;
+  position: relative;
+  overflow: hidden;
+
+  // La portada lleva borde azul: es la que sale en el catálogo y
+  // conviene reconocerla de un vistazo.
+  &.portada { border-color: var(--blue); }
+
+  img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .etiqueta {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--blue);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+  }
+
+  figcaption {
+    padding: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.orden {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  button {
+    background: transparent;
+    border: 1px solid var(--line2);
+    color: #A9B7C5;
+    width: 30px;
+    height: 28px;
+    font-size: 13px;
+    line-height: 1;
+
+    &:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+    &:disabled { opacity: .3; cursor: not-allowed; }
+  }
+
+  span {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--dim);
+    min-width: 16px;
+    text-align: center;
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 6px;
+
+  button {
+    flex: 1;
+    padding: 7px 4px;
+    font-size: 9.5px;
+  }
+}
