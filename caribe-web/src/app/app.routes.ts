@@ -161,9 +161,49 @@ export const routes: Routes = [
     title: 'Nueva contraseña · Importaciones del Caribe CR'
   },
 
-  // Provisional mientras se construye el sitio público.
-  { path: '', redirectTo: 'admin/login', pathMatch: 'full' },
+  // ══════════════════ SITIO PÚBLICO ══════════════════
 
-  // El comodín SIEMPRE al final.
-  { path: '**', redirectTo: 'admin/login' }
+  // Va al FINAL: su ruta vacía captura todo lo que no coincidió antes.
+  // Si estuviera arriba, se tragaría /admin y el panel sería
+  // inalcanzable.
+  {
+    path: '',
+    loadComponent: () =>
+      import('./features/sitio/layout/sitio-layout.component')
+        .then(m => m.SitioLayoutComponent),
+
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () =>
+          import('./features/sitio/inicio/inicio.component')
+            .then(m => m.InicioComponent)
+      },
+      {
+        path: 'vehiculos',
+        loadComponent: () =>
+          import('./features/sitio/catalogo/catalogo.component')
+            .then(m => m.CatalogoPublicoComponent)
+      },
+      {
+        // Mismo patrón que usa el panel para enlazar desde una
+        // solicitud: /vehiculos/toyota-tacoma-2023-blanco
+        path: 'vehiculos/:slug',
+        loadComponent: () =>
+          import('./features/sitio/ficha/ficha.component')
+            .then(m => m.FichaComponent)
+      },
+
+      // El comodín dentro del layout: la página 404 lleva encabezado y
+      // pie, así quien llega a un enlace roto puede seguir navegando.
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/sitio/no-encontrada/no-encontrada.component')
+            .then(m => m.NoEncontradaComponent),
+        title: 'Página no encontrada · Importaciones del Caribe CR'
+      }
+    ]
+  }
 ];

@@ -1,0 +1,158 @@
+.barra {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 60;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  transition: background .25s, border-color .25s;
+  border-bottom: 1px solid transparent;
+
+  &.solida {
+    background: rgba(5, 7, 10, .92);
+    backdrop-filter: blur(14px);
+    border-bottom-color: var(--line);
+  }
+}
+
+.envoltura {
+  width: 100%;
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--txt);
+
+  img { width: 42px; height: 42px; object-fit: contain; }
+
+  strong {
+    display: block;
+    font-family: var(--disp);
+    font-size: 17px;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  &:hover { color: var(--txt); }
+}
+
+.enlaces {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+
+  > a:not(.cta):not(.ig) {
+    font-size: 14.5px;
+    color: #C4CFDA;
+    position: relative;
+    padding: 6px 0;
+
+    &:hover, &.activo { color: #fff; }
+
+    &.activo::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 2px;
+      background: var(--blue);
+    }
+  }
+}
+
+.ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #C4CFDA;
+
+  &:hover { color: #fff; }
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--red);
+  color: #fff;
+  padding: 11px 18px;
+  font-family: var(--disp);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  transition: background .2s;
+
+  &:hover { background: var(--red-l); color: #fff; }
+}
+
+.menu {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--txt);
+  padding: 6px;
+}
+
+.solo-movil { display: none; }
+
+// ── Celular ──
+// El menú pasa a un panel que baja desde la barra: cuatro enlaces y un
+// botón no entran en 390 píxeles de ancho.
+@media (max-width: 900px) {
+  .menu { display: inline-flex; }
+
+  .enlaces {
+    position: fixed;
+    top: 72px; left: 0; right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 22px 22px;
+    background: rgba(5, 7, 10, .97);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+
+    transform: translateY(-8px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+
+    &.abierto { transform: none; opacity: 1; pointer-events: auto; }
+
+    > a:not(.cta) {
+      padding: 15px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 16px;
+
+      &.activo::after { display: none; }
+    }
+  }
+
+  .solo-movil { display: inline; }
+  .cta { justify-content: center; margin-top: 16px; padding: 15px; }
+}
+
+@media (max-width: 420px) {
+  .marca small { display: none; }
+  .marca strong { font-size: 15px; }
+}
