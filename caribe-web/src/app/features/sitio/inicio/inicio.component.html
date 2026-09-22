@@ -1,0 +1,115 @@
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <div class="envoltura">
+
+    <div class="texto">
+      <p class="etiqueta"><span class="punto"></span> De Estados Unidos a Costa Rica</p>
+
+      <h1>El carro que buscás, <span>traído para vos.</span></h1>
+
+      <p class="bajada">
+        Precio final puesto en Costa Rica: el vehículo, el traslado, los
+        impuestos y los trámites, todo en un solo número. Sin sorpresas
+        cuando llega.
+      </p>
+
+      <div class="acciones">
+        <a class="principal" routerLink="/vehiculos">
+          Ver el catálogo
+          <app-icono nombre="flecha" [tam]="18" />
+        </a>
+        <a class="secundario" [href]="contacto.whatsappUrl(mensajeGeneral)"
+           target="_blank" rel="noopener">
+          <app-icono nombre="chat" [tam]="18" />
+          Escribinos
+        </a>
+      </div>
+
+      <ul class="garantias">
+        <li>Precio final incluido</li>
+        <li>Contado o financiado</li>
+        <li>Te acompañamos en los trámites</li>
+      </ul>
+    </div>
+
+    <!-- El destacado ocupa el lugar de la "foto de portada". Es un
+         vehículo real y disponible: vende más que una imagen genérica. -->
+    <div class="vitrina">
+      @if (destacado(); as d) {
+        <a class="destacado" [routerLink]="['/vehiculos', d.slug]">
+          <div class="foto">
+            @if (d.fotoPortada) {
+              <img [src]="d.fotoPortada" [alt]="d.marca + ' ' + d.modelo + ' ' + d.anio"
+                   width="400" height="300" fetchpriority="high">
+            }
+            <span class="sello">Destacado</span>
+          </div>
+          <div class="info">
+            <div>
+              <p class="nombre">{{ d.marca }} {{ d.modelo }}</p>
+              <p class="detalle">{{ d.anio }} · {{ d.kilometraje | number }} km</p>
+            </div>
+            <div class="precio">
+              <strong>{{ d.precioPublicado | currency:'USD':'symbol':'1.0-0' }}</strong>
+              <small>Puesto en CR</small>
+            </div>
+          </div>
+        </a>
+      } @else if (!cargando()) {
+        <div class="vacia">
+          <p class="nombre">Catálogo en preparación</p>
+          <p>Estamos cargando los primeros vehículos. Mientras, escribinos qué buscás.</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ RECIENTES ══════════ -->
+@if (recientes().length > 0) {
+  <section class="bloque">
+    <div class="envoltura">
+      <header class="cabecera">
+        <div>
+          <p class="etq">Disponibles ahora</p>
+          <h2>Recién publicados</h2>
+        </div>
+        @if (total() > recientes().length) {
+          <a class="ver-todos" routerLink="/vehiculos">
+            Ver los {{ total() }} vehículos
+            <app-icono nombre="flecha" [tam]="16" />
+          </a>
+        }
+      </header>
+
+      <div class="rejilla">
+        @for (v of recientes(); track v.slug; let i = $index) {
+          <app-tarjeta-vehiculo [v]="v" [prioritaria]="i < 3" />
+        }
+      </div>
+    </div>
+  </section>
+}
+
+<!-- ══════════ ¿NO LO ENCONTRÁS? ══════════ -->
+<!-- Reemplaza al formulario "a tu medida": quien no ve lo que busca
+     es el cliente más claro que llega al sitio, y no debe irse sin
+     una forma directa de pedirlo. -->
+<section class="bloque">
+  <div class="envoltura">
+    <div class="busqueda">
+      <div>
+        <h2>¿No ves el que buscás?</h2>
+        <p>
+          Contanos marca, modelo y año. Revisamos las subastas de Estados
+          Unidos y te avisamos cuando aparezca uno que calce.
+        </p>
+      </div>
+      <a class="principal" [href]="contacto.whatsappUrl(mensajeBusqueda)"
+         target="_blank" rel="noopener">
+        <app-icono nombre="chat" [tam]="18" />
+        Pedilo por WhatsApp
+      </a>
+    </div>
+  </div>
+</section>

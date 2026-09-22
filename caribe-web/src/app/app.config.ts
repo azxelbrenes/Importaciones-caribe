@@ -16,6 +16,7 @@ import { firstValueFrom, of } from 'rxjs';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { apiServidorInterceptor } from './core/http/api-servidor';
 import { AuthService } from './core/auth/auth.service';
 
 export const appConfig: ApplicationConfig = {
@@ -32,21 +33,22 @@ export const appConfig: ApplicationConfig = {
 
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor])
+      // apiServidor va primero: completa la dirección antes de que el
+      // de autenticación agregue el token. En el navegador no hace nada.
+      withInterceptors([apiServidorInterceptor, authInterceptor])
     ),
 
     provideClientHydration(
-      // Las peticiones POST no se guardan en el caché de transferencia:
-      // son acciones, no datos, y repetirlas tendría efectos.
+      // Lo que el servidor ya pidió viaja dentro del HTML. El navegador
+      // lo reutiliza en vez de pedirlo otra vez: el catálogo aparece
+      // de una, sin parpadear mientras recarga.
+      //
+      // Los POST no se guardan: son acciones, y repetirlas tendría efectos.
       withHttpTransferCacheOptions({ includePostRequests: false })
     ),
 
-    // Al arrancar, intenta recuperar la sesión con la cookie. Sin
-    // esto, refrescar la página dentro del panel devolvería al login
-    // aunque la sesión siguiera viva.
-    //
-    // Solo en el navegador: en el servidor no hay cookie del usuario
-    // y el intento fallaría en cada renderizado.
+    // Al arrancar, intenta recuperar la sesión con la cookie. Solo en
+    // el navegador: en el servidor no hay cookie del usuario.
     provideAppInitializer(() => {
       const plataforma = inject(PLATFORM_ID);
       const auth = inject(AuthService);

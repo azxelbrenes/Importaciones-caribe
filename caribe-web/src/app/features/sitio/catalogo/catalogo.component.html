@@ -1,0 +1,180 @@
+<section class="cabecera">
+  <div class="envoltura">
+    <p class="etq">Catálogo</p>
+    <h1>Vehículos disponibles</h1>
+    <p class="bajada">
+      Todos los precios son finales, puestos en Costa Rica: impuestos,
+      traslado y trámites incluidos.
+    </p>
+  </div>
+</section>
+
+<div class="envoltura cuerpo">
+
+  <!-- ══════════ FILTROS ══════════ -->
+  <aside class="filtros" [class.abiertos]="filtrosAbiertos()">
+    <button class="alternar" type="button" (click)="filtrosAbiertos.update(v => !v)"
+            [attr.aria-expanded]="filtrosAbiertos()">
+      Filtros
+      @if (cantidadFiltros() > 0) { <span class="cuenta">{{ cantidadFiltros() }}</span> }
+      <span class="flecha">{{ filtrosAbiertos() ? '▲' : '▼' }}</span>
+    </button>
+
+    <div class="campos">
+      <div class="campo">
+        <label for="c-q">Buscar</label>
+        <input id="c-q" type="search" placeholder="Hilux, Tacoma, blanco…"
+               [ngModel]="filtro().busqueda ?? ''"
+               (keyup.enter)="cambiar({ q: $any($event.target).value || null })"
+               (search)="cambiar({ q: $any($event.target).value || null })">
+      </div>
+
+      <div class="campo">
+        <label for="c-marca">Marca</label>
+        <select id="c-marca" [ngModel]="filtro().marcaId ?? null"
+                (ngModelChange)="alCambiarMarca($event)">
+          <option [ngValue]="null">Todas</option>
+          @for (m of marcas(); track m.id) {
+            <option [ngValue]="m.id">{{ m.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="c-modelo">Modelo</label>
+        <select id="c-modelo" [disabled]="!filtro().marcaId"
+                [ngModel]="filtro().modeloId ?? null"
+                (ngModelChange)="cambiar({ modeloId: $event })">
+          <option [ngValue]="null">{{ filtro().marcaId ? 'Todos' : 'Elegí una marca' }}</option>
+          @for (m of modelos(); track m.id) {
+            <option [ngValue]="m.id">{{ m.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="c-precio">Precio hasta</label>
+        <select id="c-precio" [ngModel]="filtro().precioMax ?? null"
+                (ngModelChange)="cambiar({ precioMax: $event })">
+          <option [ngValue]="null">Cualquiera</option>
+          @for (p of precios; track p) {
+            <option [ngValue]="p">$ {{ p / 1000 }} 000</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="c-anio">Año desde</label>
+        <select id="c-anio" [ngModel]="filtro().anioDesde ?? null"
+                (ngModelChange)="cambiar({ anioDesde: $event })">
+          <option [ngValue]="null">Cualquiera</option>
+          @for (a of anios; track a) {
+            <option [ngValue]="a">{{ a }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="c-trans">Transmisión</label>
+        <select id="c-trans" [ngModel]="filtro().transmision ?? null"
+                (ngModelChange)="cambiar({ transmision: $event })">
+          <option [ngValue]="null">Cualquiera</option>
+          @for (o of transmisiones(); track o.valor) {
+            <option [ngValue]="o.valor">{{ o.texto }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="campo">
+        <label for="c-comb">Combustible</label>
+        <select id="c-comb" [ngModel]="filtro().combustible ?? null"
+                (ngModelChange)="cambiar({ combustible: $event })">
+          <option [ngValue]="null">Cualquiera</option>
+          @for (o of combustibles(); track o.valor) {
+            <option [ngValue]="o.valor">{{ o.texto }}</option>
+          }
+        </select>
+      </div>
+
+      <label class="casilla">
+        <input type="checkbox" [ngModel]="!!filtro().aceptaFinanciamiento"
+               (ngModelChange)="cambiar({ financiable: $event ? 1 : null })">
+        <span>Solo con financiamiento</span>
+      </label>
+
+      @if (cantidadFiltros() > 0) {
+        <button class="limpiar" type="button" (click)="limpiar()">Quitar filtros</button>
+      }
+    </div>
+  </aside>
+
+  <!-- ══════════ RESULTADOS ══════════ -->
+  <section class="resultados">
+    <div class="barra">
+      <p class="conteo">
+        @if (!cargando()) {
+          {{ total() }} {{ total() === 1 ? 'vehículo' : 'vehículos' }}
+        }
+      </p>
+
+      <div class="campo orden">
+        <label for="c-orden">Ordenar</label>
+        <select id="c-orden" [ngModel]="filtro().ordenarPor ?? 'reciente'"
+                (ngModelChange)="cambiar({ orden: $event === 'reciente' ? null : $event })">
+          @for (o of ordenes; track o.valor) {
+            <option [value]="o.valor">{{ o.texto }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="rejilla">
+        @for (i of [1,2,3,4,5,6]; track i) { <div class="fantasma"></div> }
+      </div>
+
+    } @else if (vehiculos().length === 0) {
+
+      <div class="vacio">
+        <p class="titulo">
+          @if (cantidadFiltros() > 0) { No encontramos ese vehículo en el catálogo }
+          @else { Todavía no hay vehículos publicados }
+        </p>
+        <p>
+          Contanos qué buscás y lo conseguimos. El mensaje ya lleva lo que
+          filtraste, solo tenés que enviarlo.
+        </p>
+        <div class="acciones">
+          <a class="principal" [href]="mensajeSinResultados()" target="_blank" rel="noopener">
+            <app-icono nombre="chat" [tam]="18" />
+            Pedilo por WhatsApp
+          </a>
+          @if (cantidadFiltros() > 0) {
+            <button class="secundario" type="button" (click)="limpiar()">Ver todo el catálogo</button>
+          }
+        </div>
+      </div>
+
+    } @else {
+
+      <div class="rejilla">
+        @for (v of vehiculos(); track v.slug; let i = $index) {
+          <app-tarjeta-vehiculo [v]="v" [prioritaria]="i < 3" />
+        }
+      </div>
+
+      @if (totalPaginas() > 1) {
+        <nav class="paginas" aria-label="Páginas">
+          <button type="button" [disabled]="pagina() === 1" (click)="irAPagina(pagina() - 1)">
+            ← Anterior
+          </button>
+          <span>{{ pagina() }} de {{ totalPaginas() }}</span>
+          <button type="button" [disabled]="pagina() === totalPaginas()"
+                  (click)="irAPagina(pagina() + 1)">
+            Siguiente →
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</div>
