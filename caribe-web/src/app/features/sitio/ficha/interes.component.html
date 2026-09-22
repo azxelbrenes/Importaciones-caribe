@@ -1,0 +1,95 @@
+<div class="fondo" (click)="cerrar.emit()">
+  <div class="caja" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+    <button class="x" type="button" aria-label="Cerrar" (click)="cerrar.emit()">✕</button>
+
+    @if (listo()) {
+
+      <div class="exito">
+        <p class="titulo">Listo, ya te tenemos</p>
+        <p>
+          Te abrimos WhatsApp para que termines de enviar el mensaje. Si
+          no se abrió, tocá el botón de abajo.
+        </p>
+        <a class="wa" [href]="enlaceWhatsapp()" target="_blank" rel="noopener">
+          Abrir WhatsApp
+        </a>
+        <button class="cerrar-texto" type="button" (click)="cerrar.emit()">
+          Seguir viendo el catálogo
+        </button>
+      </div>
+
+    } @else {
+
+      <p class="etq">Consultar por</p>
+      <p class="vehiculo">{{ v().marca }} {{ v().modelo }} {{ v().anio }}</p>
+      <p class="precio">{{ v().precioPublicado | currency:'USD':'symbol':'1.0-0' }}</p>
+
+      <div class="campo">
+        <label for="i-nombre">Tu nombre</label>
+        <input id="i-nombre" type="text" maxlength="120" autocomplete="name"
+               placeholder="Nombre y apellido"
+               [ngModel]="nombre()" (ngModelChange)="nombre.set($event)">
+      </div>
+
+      <div class="campo">
+        <label for="i-wa">Tu WhatsApp</label>
+        <input id="i-wa" type="tel" inputmode="tel" autocomplete="tel"
+               placeholder="8888 8888"
+               [ngModel]="whatsapp()" (ngModelChange)="whatsapp.set($event)">
+      </div>
+
+      <div class="campo">
+        <label>¿Cómo querés pagarlo?</label>
+        <div class="opciones">
+          <button type="button" [class.activa]="formaPago() === PAGO.Contado"
+                  (click)="elegirPago(PAGO.Contado)">De contado</button>
+
+          @if (financiable()) {
+            <button type="button" [class.activa]="formaPago() === PAGO.Financiado"
+                    (click)="elegirPago(PAGO.Financiado)">Financiado</button>
+          }
+        </div>
+      </div>
+
+      @if (formaPago() === PAGO.Financiado && v().financiamiento; as f) {
+        <div class="campo">
+          <label>¿En cuántos meses?</label>
+          <div class="opciones">
+            @for (p of f.plazos; track p) {
+              <button type="button" [class.activa]="plazo() === p" (click)="plazo.set(p)">
+                {{ p }} meses
+              </button>
+            }
+          </div>
+          <small>
+            Prima de {{ f.prima | currency:'USD':'symbol':'1.0-0' }}.
+            Las condiciones te las damos por WhatsApp.
+          </small>
+        </div>
+      }
+
+      <!-- Ley 8968: sin consentimiento explícito no se pueden tratar los
+           datos. El backend rechaza la solicitud sin esta casilla. -->
+      <label class="consentimiento">
+        <input type="checkbox" [ngModel]="consentimiento()"
+               (ngModelChange)="consentimiento.set($event)">
+        <span>
+          Autorizo que me contacten por WhatsApp para darme información
+          sobre este vehículo.
+        </span>
+      </label>
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button class="enviar" type="button" [disabled]="!valido() || enviando()"
+              (click)="enviar()">
+        @if (enviando()) { Enviando… } @else { Enviar y abrir WhatsApp }
+      </button>
+
+      <p class="nota">Te escribimos lo antes posible, normalmente el mismo día.</p>
+    }
+  </div>
+</div>

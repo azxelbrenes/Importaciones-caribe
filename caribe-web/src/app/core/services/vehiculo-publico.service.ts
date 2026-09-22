@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { Pagina } from '../models/pagina.model';
 import { FiltroCatalogo, VehiculoPublico } from '../models/vehiculo-publico.model';
 import { FinanciamientoPublico } from '../models/financiamiento.model';
+import { CrearSolicitud, VehiculoDetalle } from '../models/vehiculo-detalle.model';
 
 @Injectable({ providedIn: 'root' })
 export class VehiculoPublicoService {
@@ -26,7 +27,19 @@ export class VehiculoPublicoService {
     return this.http.get<VehiculoPublico | null>(`${this.base}/vehiculos/destacado`);
   }
 
+  /// La ficha. Cada visita suma una al contador que ve el panel.
+  detalle(slug: string): Observable<VehiculoDetalle> {
+    return this.http.get<VehiculoDetalle>(`${this.base}/vehiculos/${slug}`);
+  }
+
   financiamiento(): Observable<FinanciamientoPublico> {
     return this.http.get<FinanciamientoPublico>(`${this.base}/financiamiento/publico`);
+  }
+
+  /// Guarda la solicitud ANTES de abrir WhatsApp. Si se abriera primero,
+  /// el contacto existiría solo en el chat: sin registro, sin estadística
+  /// y sin forma de saber quién quedó sin respuesta.
+  crearSolicitud(dto: CrearSolicitud): Observable<number> {
+    return this.http.post<number>(`${this.base}/solicitudes`, dto);
   }
 }

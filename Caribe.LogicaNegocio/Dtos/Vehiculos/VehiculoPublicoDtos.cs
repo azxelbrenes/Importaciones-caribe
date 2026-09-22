@@ -61,6 +61,13 @@ public record FinanciamientoVehiculoDto(
 );
 
 public record VehiculoDetalleDto(
+    /// <summary>
+    /// Se expone para que el formulario de interes pueda enlazar la
+    /// solicitud con el vehiculo. No revela nada: los costos no estan
+    /// en este tipo, y el catalogo ya es publico.
+    /// </summary>
+    int Id,
+
     string Slug,
     string Marca,
     string Modelo,

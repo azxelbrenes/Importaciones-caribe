@@ -1,0 +1,193 @@
+@if (cargando()) {
+  <div class="cargando"><p>Cargando…</p></div>
+
+} @else if (noExiste()) {
+
+  <section class="no-existe">
+    <p class="etq">Ya no está disponible</p>
+    <h1>Este vehículo se vendió</h1>
+    <p class="texto">
+      Puede que lo hayamos entregado, o que el enlace esté incompleto.
+      Mirá lo que tenemos ahora, o contanos qué buscás.
+    </p>
+    <div class="acciones">
+      <a class="principal" routerLink="/vehiculos">Ver el catálogo</a>
+      <a class="secundario" [href]="contacto.whatsappUrl()" target="_blank" rel="noopener">
+        Escribinos
+      </a>
+    </div>
+  </section>
+
+} @else if (v(); as v) {
+
+  <div class="envoltura ficha">
+
+    <nav class="miga" aria-label="Ubicación">
+      <a routerLink="/">Inicio</a> <span>/</span>
+      <a routerLink="/vehiculos">Catálogo</a> <span>/</span>
+      <em>{{ v.marca }} {{ v.modelo }}</em>
+    </nav>
+
+    <div class="columnas">
+
+      <!-- ══════════ GALERÍA ══════════ -->
+      <div class="galeria">
+        @if (fotoActual(); as f) {
+          <button class="principal-foto" type="button" (click)="ampliada.set(true)"
+                  aria-label="Ampliar fotografía">
+            <img [src]="f.url" [alt]="v.marca + ' ' + v.modelo + ' ' + v.anio"
+                 width="1200" height="900" fetchpriority="high">
+
+            @if (v.fotos.length > 1) {
+              <span class="contador">{{ indiceFoto() + 1 }} / {{ v.fotos.length }}</span>
+            }
+          </button>
+
+          @if (v.fotos.length > 1) {
+            <div class="miniaturas">
+              @for (foto of v.fotos; track foto.url; let i = $index) {
+                <button type="button" [class.activa]="i === indiceFoto()"
+                        [attr.aria-label]="'Ver fotografía ' + (i + 1)"
+                        (click)="verFoto(i)">
+                  <img [src]="foto.urlThumb" alt="" width="400" height="300" loading="lazy">
+                </button>
+              }
+            </div>
+          }
+        } @else {
+          <div class="sin-fotos">Sin fotografías</div>
+        }
+      </div>
+
+      <!-- ══════════ DATOS ══════════ -->
+      <div class="datos">
+        @if (v.estado === EN_TRATO) {
+          <p class="aviso-trato">
+            Este vehículo ya está en negociación. Consultá igual: si no se
+            concreta, te avisamos.
+          </p>
+        }
+
+        <h1>{{ v.marca }} {{ v.modelo }}</h1>
+        <p class="sub">{{ v.anio }} · {{ v.kilometraje | number }} km</p>
+
+        <div class="precio">
+          <strong>{{ v.precioPublicado | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <small>Precio final puesto en Costa Rica</small>
+        </div>
+
+        <button class="cta" type="button" (click)="abrirInteres()">
+          <app-icono nombre="chat" [tam]="19" />
+          Me interesa
+        </button>
+
+        <a class="directo" [href]="mensajeDirecto()" target="_blank" rel="noopener">
+          o escribinos directo por WhatsApp
+        </a>
+
+        <!-- ── Ficha técnica ── -->
+        <dl class="tecnica">
+          <div><dt>Año</dt><dd>{{ v.anio }}</dd></div>
+          <div><dt>Kilometraje</dt><dd>{{ v.kilometraje | number }} km</dd></div>
+          <div><dt>Transmisión</dt><dd>{{ v.transmision }}</dd></div>
+          <div><dt>Combustible</dt><dd>{{ v.combustible }}</dd></div>
+          <div><dt>Tracción</dt><dd>{{ v.traccion }}</dd></div>
+          @if (v.color) { <div><dt>Color</dt><dd>{{ v.color }}</dd></div> }
+        </dl>
+      </div>
+    </div>
+
+    <!-- ══════════ DESGLOSE Y FINANCIAMIENTO ══════════ -->
+    <div class="secciones">
+
+      <section class="bloque">
+        <h2>Qué incluye el precio</h2>
+        <p class="ayuda">
+          El número de arriba es lo que pagás en total. Sin cobros
+          adicionales al entregar.
+        </p>
+
+        <ul class="desglose">
+          @for (l of lineas(); track l.etiqueta) {
+            <li>
+              <span>{{ l.etiqueta }}</span>
+              <strong>{{ l.valor | currency:'USD':'symbol':'1.0-0' }}</strong>
+            </li>
+          }
+          <li class="total">
+            <span>Total puesto en Costa Rica</span>
+            <strong>{{ v.desglose.total | currency:'USD':'symbol':'1.0-0' }}</strong>
+          </li>
+        </ul>
+
+        <!-- El aviso no es relleno: el avalúo de Hacienda y el tipo de
+             cambio se mueven, y un precio publicado es una oferta. -->
+        <p class="vigencia">
+          Cotización válida por {{ v.desglose.vigenciaDias }} días. Después
+          puede variar con el tipo de cambio y el avalúo de Hacienda.
+        </p>
+      </section>
+
+      @if (v.financiamiento; as f) {
+        <section class="bloque financiamiento">
+          <h2>Podés financiarlo</h2>
+          <p class="ayuda">
+            Prima del {{ f.porcentajePrima }}% y el resto en cuotas. Elegí
+            el plazo y te damos las condiciones por WhatsApp.
+          </p>
+
+          <p class="prima">
+            Prima: <strong>{{ f.prima | currency:'USD':'symbol':'1.0-0' }}</strong>
+          </p>
+
+          <div class="plazos">
+            @for (p of f.plazos; track p) {
+              <button type="button" (click)="abrirInteres(p)">
+                <span class="meses">{{ p }}</span>
+                <span class="etq">meses</span>
+              </button>
+            }
+          </div>
+
+          <p class="nota-legal">
+            Las condiciones del financiamiento se acuerdan directamente
+            con el cliente. Este sitio no publica tasas ni cuotas.
+          </p>
+        </section>
+      }
+
+      @if (v.descripcion) {
+        <section class="bloque">
+          <h2>Sobre este vehículo</h2>
+          <p class="descripcion">{{ v.descripcion }}</p>
+        </section>
+      }
+    </div>
+
+    <div class="volver">
+      <a routerLink="/vehiculos">← Ver todo el catálogo</a>
+    </div>
+  </div>
+
+  <!-- ══════════ FOTO AMPLIADA ══════════ -->
+  @if (ampliada() && fotoActual(); as f) {
+    <div class="visor" (click)="ampliada.set(false)">
+      <button class="cerrar" type="button" aria-label="Cerrar" (click)="ampliada.set(false)">✕</button>
+
+      <img [src]="f.url" [alt]="v.marca + ' ' + v.modelo" (click)="$event.stopPropagation()">
+
+      @if (v.fotos.length > 1) {
+        <button class="mover izq" type="button" aria-label="Anterior"
+                (click)="$event.stopPropagation(); mover(-1)">‹</button>
+        <button class="mover der" type="button" aria-label="Siguiente"
+                (click)="$event.stopPropagation(); mover(1)">›</button>
+        <span class="contador">{{ indiceFoto() + 1 }} / {{ v.fotos.length }}</span>
+      }
+    </div>
+  }
+
+  @if (mostrarInteres()) {
+    <app-interes [v]="v" [plazoInicial]="plazoElegido()"
+                 (cerrar)="mostrarInteres.set(false)" />
+  }
+}

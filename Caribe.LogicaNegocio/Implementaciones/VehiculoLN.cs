@@ -108,6 +108,7 @@ public class VehiculoLN : IVehiculoLN
         }
 
         var detalle = new VehiculoDetalleDto(
+            v.Id,
             v.Slug,
             v.Marca.Nombre,
             v.Modelo.Nombre,
