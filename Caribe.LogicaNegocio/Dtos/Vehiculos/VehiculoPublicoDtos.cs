@@ -47,15 +47,17 @@ public record FotoDto(
 );
 
 /// <summary>
-/// Opcion de financiamiento para la ficha. Se calcula al vuelo y
-/// solo aparece si la configuracion global esta operativa.
+/// Financiamiento de un vehiculo en la ficha. Solo aparece si el
+/// vehiculo lo acepta y la configuracion esta activa.
+///
+/// Muestra la prima en dinero —dato util y que no revela ningun
+/// interes— y los plazos entre los que el cliente puede elegir. Las
+/// condiciones se las da el dueno por WhatsApp.
 /// </summary>
-public record OpcionFinanciamientoDto(
-    short PlazoMeses,
+public record FinanciamientoVehiculoDto(
+    decimal PorcentajePrima,
     decimal Prima,
-    decimal CuotaMensual,
-    decimal TotalAPagar,
-    decimal TasaAnual
+    IReadOnlyList<short> Plazos
 );
 
 public record VehiculoDetalleDto(
@@ -73,6 +75,7 @@ public record VehiculoDetalleDto(
     short Estado,
     DesglosePrecioDto Desglose,
     IReadOnlyList<FotoDto> Fotos,
-    IReadOnlyList<OpcionFinanciamientoDto> Financiamiento,
-    string? TextoLegalFinanciamiento
+
+    /// <summary>Null si el vehiculo no se financia o esta apagado.</summary>
+    FinanciamientoVehiculoDto? Financiamiento
 );

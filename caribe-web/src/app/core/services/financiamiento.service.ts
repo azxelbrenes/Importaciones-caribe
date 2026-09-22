@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  ConfiguracionFinanciamiento, GuardarFinanciamiento
+  ConfiguracionFinanciamiento, FinanciamientoPublico, GuardarFinanciamiento
 } from '../models/financiamiento.model';
 
 @Injectable({ providedIn: 'root' })
@@ -17,5 +17,9 @@ export class FinanciamientoService {
 
   actualizar(dto: GuardarFinanciamiento): Observable<boolean> {
     return this.http.put<boolean>(`${this.base}/configuracion`, dto);
+  }
+
+  publico(): Observable<FinanciamientoPublico> {
+    return this.http.get<FinanciamientoPublico>(`${this.base}/publico`);
   }
 }

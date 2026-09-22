@@ -64,18 +64,3 @@ export interface ResultadoSubida {
   subidas: Foto[];
   errores: { archivo: string; motivo: string }[];
 }
-
-export interface CuotaSimulada {
-  plazoMeses: number;
-  cuotaMensual: number;
-  totalIntereses: number;
-  totalAPagar: number;
-  tasaAnual: number;
-}
-
-export interface Simulacion {
-  precioVehiculo: number;
-  prima: number;
-  opciones: CuotaSimulada[];
-  textoLegal: string | null;
-}

@@ -6,7 +6,6 @@ import {
   Foto,
   GuardarVehiculo,
   ResultadoSubida,
-  Simulacion,
   VehiculoDetalleAdmin
 } from '../models/vehiculo-form.model';
 
@@ -59,14 +58,5 @@ export class VehiculoFormService {
     return this.http.put<boolean>(`${this.base}/${vehiculoId}/fotos/orden`, {
       vehiculoId, idsEnOrden
     });
-  }
-
-  // ══════════════ FINANCIAMIENTO ══════════════
-
-  /// Devuelve null si el financiamiento esta apagado. No es un error:
-  /// es un estado normal del sistema.
-  simular(precio: number): Observable<Simulacion | null> {
-    return this.http.get<Simulacion | null>(
-      `${environment.apiUrl}/financiamiento/simular?precio=${precio}`);
   }
 }

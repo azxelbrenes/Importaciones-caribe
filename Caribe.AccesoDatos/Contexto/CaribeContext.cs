@@ -364,12 +364,9 @@ public class CaribeContext : IdentityDbContext<AppUser>
             e.ToTable("configuracion_financiamiento");
 
             e.Property(x => x.PorcentajePrima).HasPrecision(5, 2);
-            e.Property(x => x.TasaAnual).HasPrecision(5, 2);
             e.Property(x => x.PlazosDisponibles).HasMaxLength(60);
             e.Property(x => x.ActualizadoPorId).HasMaxLength(450);
             e.Property(x => x.ActualizadoEn).HasDefaultValueSql("now()");
-
-            e.Ignore(x => x.EstaOperativo);
 
             // Fila unica creada con la migracion: el sistema siempre
             // tiene una configuracion que leer, aunque este apagada.
@@ -378,7 +375,6 @@ public class CaribeContext : IdentityDbContext<AppUser>
                 Id = 1,
                 Activo = false,
                 PorcentajePrima = 50m,
-                TasaAnual = 0m,
                 PlazoMinimoMeses = 12,
                 PlazoMaximoMeses = 36,
                 PlazosDisponibles = "12,24,36",

@@ -41,6 +41,24 @@ public class SolicitudLN : ISolicitudLN
             return Respuesta<int>.Invalido(
                 "El presupuesto máximo debe ser mayor al mínimo.");
 
+        // Si pide financiamiento con un plazo, ese plazo tiene que ser
+        // uno de los que se ofrecen. Sin esto, alguien podria mandar
+        // "a 96 meses" desde las herramientas del navegador y llegaria
+        // al panel como si el sitio lo hubiera ofrecido.
+        if ((FormaPago)dto.FormaPago == FormaPago.Financiado && dto.PlazoMesesInteres.HasValue)
+        {
+            var config = await _db.ConfiguracionFinanciamiento
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct);
+
+            if (config is null || !config.Activo)
+                return Respuesta<int>.Invalido(
+                    "El financiamiento no está disponible en este momento.");
+
+            if (!config.Plazos().Contains(dto.PlazoMesesInteres.Value))
+                return Respuesta<int>.Invalido("El plazo elegido no está disponible.");
+        }
+
         // Anti duplicado suave: el mismo numero pidiendo lo mismo en
         // menos de cinco minutos casi siempre es un doble clic o un
         // reenvio del formulario, no dos consultas distintas.

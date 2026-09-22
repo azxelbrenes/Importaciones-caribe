@@ -13,10 +13,8 @@ public interface IFinanciamientoLN
         CancellationToken ct = default);
 
     /// <summary>
-    /// Simula las cuotas para un precio. Devuelve null en el valor si
-    /// el financiamiento no esta operativo: sin tasa puesta o sin
-    /// activar, no se ofrece nada.
+    /// Lo que necesita el sitio publico: si se ofrece, prima y plazos.
     /// </summary>
-    Task<Respuesta<SimulacionDto?>> SimularAsync(
-        decimal precio, CancellationToken ct = default);
+    Task<Respuesta<FinanciamientoPublicoDto>> ObtenerPublicoAsync(
+        CancellationToken ct = default);
 }

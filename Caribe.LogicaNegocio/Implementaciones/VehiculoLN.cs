@@ -80,23 +80,31 @@ public class VehiculoLN : IVehiculoLN
             .ExecuteUpdateAsync(s => s.SetProperty(
                 x => x.Visitas, x => x.Visitas + 1), ct);
 
-        var config = await _db.ConfiguracionFinanciamiento
-            .AsNoTracking()
-            .FirstOrDefaultAsync(ct);
+        // El financiamiento aparece solo si el vehiculo lo acepta Y la
+        // configuracion esta activa. No se publican tasas ni cuotas:
+        // la prima y los plazos, y el interes lo da el dueno por
+        // WhatsApp.
+        FinanciamientoVehiculoDto? financiamiento = null;
 
-        var opciones = new List<OpcionFinanciamientoDto>();
-
-        // Dos condiciones: el vehiculo lo acepta Y la configuracion
-        // global esta operativa. Basta que falte una para no mostrar
-        // nada.
-        if (v.AceptaFinanciamiento && config is not null && config.EstaOperativo)
+        if (v.AceptaFinanciamiento)
         {
-            opciones = CalculadoraFinanciamiento
-                .CalcularTodos(v.PrecioPublicado, config)
-                .Select(p => new OpcionFinanciamientoDto(
-                    p.PlazoMeses, p.Prima, p.CuotaMensual,
-                    p.TotalAPagar, p.TasaAnual))
-                .ToList();
+            var config = await _db.ConfiguracionFinanciamiento
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct);
+
+            if (config is not null && config.Activo)
+            {
+                var plazos = config.Plazos().ToList();
+
+                if (plazos.Count > 0)
+                {
+                    financiamiento = new FinanciamientoVehiculoDto(
+                        config.PorcentajePrima,
+                        Math.Round(v.PrecioPublicado * config.PorcentajePrima / 100m, 2,
+                            MidpointRounding.AwayFromZero),
+                        plazos);
+                }
+            }
         }
 
         var detalle = new VehiculoDetalleDto(
@@ -126,8 +134,7 @@ public class VehiculoLN : IVehiculoLN
                 .ThenBy(f => f.Orden)
                 .Select(f => new FotoDto(f.Url, f.UrlThumb, f.Orden, f.EsPortada))
                 .ToList(),
-            opciones,
-            opciones.Count > 0 ? config?.TextoLegal : null);
+            financiamiento);
 
         return Respuesta<VehiculoDetalleDto>.Ok(detalle);
     }

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CurrencyPipe, DecimalPipe } from '@angular/common';
@@ -7,7 +7,9 @@ import { forkJoin } from 'rxjs';
 import { VehiculoFormService } from '../../../../core/services/vehiculo-form.service';
 import { CatalogoService } from '../../../../core/services/catalogo.service';
 import { Marca, Modelo, Opcion } from '../../../../core/models/catalogo.model';
-import { GuardarVehiculo, Simulacion } from '../../../../core/models/vehiculo-form.model';
+import { GuardarVehiculo } from '../../../../core/models/vehiculo-form.model';
+import { FinanciamientoPublico } from '../../../../core/models/financiamiento.model';
+import { FinanciamientoService } from '../../../../core/services/financiamiento.service';
 import { ConCambios } from '../../../../core/guards/cambios-sin-guardar.guard';
 
 import { EncabezadoSeccionComponent } from '../../comunes/encabezado-seccion.component';
@@ -28,7 +30,7 @@ export class VehiculoFormularioComponent implements ConCambios {
   private catalogo = inject(CatalogoService);
   private ruta = inject(ActivatedRoute);
   private router = inject(Router);
-  private destroyRef = inject(DestroyRef);
+  private financiamientoSrv = inject(FinanciamientoService);
 
   readonly anios: number[] = (() => {
     const actual = new Date().getFullYear();
@@ -76,7 +78,14 @@ export class VehiculoFormularioComponent implements ConCambios {
   destacado            = signal(false);
   aceptaFinanciamiento = signal(false);
 
-  simulacion = signal<Simulacion | null>(null);
+  /// La configuración del financiamiento, para mostrar en el resumen
+  /// cómo va a ver la ficha el cliente. No hay tasas: prima y plazos.
+  financiamiento = signal<FinanciamientoPublico | null>(null);
+
+  primaFinanciamiento = computed(() => {
+    const f = this.financiamiento();
+    return f ? this.precio() * (f.porcentajePrima / 100) : 0;
+  });
 
   esNuevo = computed(() => this.id() === null);
 
@@ -115,8 +124,6 @@ export class VehiculoFormularioComponent implements ConCambios {
     return f;
   });
 
-  private temporizadorSimulacion: ReturnType<typeof setTimeout> | null = null;
-
   constructor() {
     forkJoin({
       marcas: this.catalogo.marcas(true),
@@ -141,29 +148,9 @@ export class VehiculoFormularioComponent implements ConCambios {
       this.cargarVehiculo(id);
     }
 
-    // La simulación se pide con espera: sin eso, escribir "38000"
-    // dispararía cinco consultas, una por dígito.
-    effect(() => {
-      const precio = this.precio();
-      const acepta = this.aceptaFinanciamiento();
-
-      if (this.temporizadorSimulacion) clearTimeout(this.temporizadorSimulacion);
-
-      if (!acepta || precio <= 0) {
-        this.simulacion.set(null);
-        return;
-      }
-
-      this.temporizadorSimulacion = setTimeout(() => {
-        this.servicio.simular(precio).subscribe({
-          next: (s) => this.simulacion.set(s),
-          error: () => this.simulacion.set(null)
-        });
-      }, 500);
-    });
-
-    this.destroyRef.onDestroy(() => {
-      if (this.temporizadorSimulacion) clearTimeout(this.temporizadorSimulacion);
+    this.financiamientoSrv.publico().subscribe({
+      next: (f) => this.financiamiento.set(f),
+      error: () => this.financiamiento.set(null)
     });
   }
 

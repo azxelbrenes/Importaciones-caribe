@@ -37,13 +37,6 @@ public class ActualizarFinanciamientoValidator
             .InclusiveBetween(0, 100)
             .WithMessage("La prima debe estar entre 0 y 100 por ciento.");
 
-        // El limite de 60 es un freno grueso contra un error de tecleo,
-        // no el tope legal: ese lo publica el Banco Central cada
-        // semestre bajo la Ley 9859 y cambia dos veces al ano.
-        RuleFor(x => x.TasaAnual)
-            .InclusiveBetween(0, 60)
-            .WithMessage("La tasa anual debe estar entre 0 y 60 por ciento.");
-
         RuleFor(x => x.PlazoMinimoMeses)
             .InclusiveBetween((short)1, (short)120);
 
@@ -55,20 +48,5 @@ public class ActualizarFinanciamientoValidator
         RuleFor(x => x.PlazosDisponibles)
             .NotEmpty().WithMessage("Indique los plazos, separados por coma.")
             .MaximumLength(60);
-
-        RuleFor(x => x.TextoLegal).MaximumLength(2000);
-
-        // Estas dos reglas son las que impiden publicar cuotas sin el
-        // respaldo legal. No son una recomendacion en un documento que
-        // se olvida: bloquean el guardado.
-        RuleFor(x => x.TasaAnual)
-            .GreaterThan(0)
-            .When(x => x.Activo)
-            .WithMessage("Indique la tasa anual antes de activar el financiamiento.");
-
-        RuleFor(x => x.TextoLegal)
-            .NotEmpty()
-            .When(x => x.Activo)
-            .WithMessage("Agregue el texto legal antes de activar el financiamiento.");
     }
 }

@@ -186,8 +186,8 @@
                      (ngModelChange)="cambiar(aceptaFinanciamiento, $event)">
               <span>
                 <strong>Acepta financiamiento</strong>
-                Muestra en la ficha las cuotas con 50% de prima, si el
-                financiamiento está activo en la configuración.
+                Muestra en la ficha la prima y los plazos para elegir. El
+                interés no se publica: lo das vos por WhatsApp.
               </span>
             </label>
           </div>
@@ -231,23 +231,24 @@
           <div class="financiamiento">
             <p class="etq">Así se ve en la ficha</p>
 
-            @if (simulacion(); as s) {
+            @if (financiamiento()?.activo) {
               <p class="prima">
-                Prima {{ s.prima | currency:'USD':'symbol':'1.0-0' }}
+                Prima del {{ financiamiento()!.porcentajePrima }}%:
+                {{ primaFinanciamiento() | currency:'USD':'symbol':'1.0-0' }}
               </p>
               <ul>
-                @for (o of s.opciones; track o.plazoMeses) {
-                  <li>
-                    <span>{{ o.plazoMeses }} meses</span>
-                    <strong>{{ o.cuotaMensual | currency:'USD':'symbol':'1.0-0' }}/mes</strong>
-                  </li>
+                @for (p of financiamiento()!.plazos; track p) {
+                  <li><span>A {{ p }} meses</span><strong>consultar</strong></li>
                 }
               </ul>
+              <p class="apagado">
+                El cliente elige el plazo y te escribe por WhatsApp. El
+                interés lo das vos en la conversación.
+              </p>
             } @else {
               <p class="apagado">
                 El financiamiento está apagado en la configuración. La
-                casilla queda marcada y las cuotas aparecen cuando se
-                active.
+                casilla queda marcada y los plazos aparecen cuando se active.
               </p>
             }
           </div>

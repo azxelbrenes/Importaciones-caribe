@@ -16,24 +16,19 @@ public class FinanciamientoController : ControladorBase
     public FinanciamientoController(IFinanciamientoLN ln) => _ln = ln;
 
     /// <summary>
-    /// Simulador del sitio publico. Devuelve null si el financiamiento
-    /// esta apagado, y el frontend simplemente no muestra la seccion.
+    /// Para el sitio: si se ofrece, prima y plazos. Sin tasas.
     /// </summary>
-    [HttpGet("simular")]
+    [HttpGet("publico")]
     [AllowAnonymous]
     [EnableRateLimiting("general")]
-    public async Task<IActionResult> Simular(
-        [FromQuery] decimal precio, CancellationToken ct)
-        => Resolver(await _ln.SimularAsync(precio, ct));
+    public async Task<IActionResult> Publico(CancellationToken ct)
+        => Resolver(await _ln.ObtenerPublicoAsync(ct));
 
     [HttpGet("configuracion")]
     public async Task<IActionResult> Configuracion(CancellationToken ct)
         => Resolver(await _ln.ObtenerAsync(ct));
 
-    /// <summary>
-    /// Cambiar la tasa es solo del propietario: tiene implicaciones
-    /// legales bajo la Ley 9859 y hay que poder responder por ella.
-    /// </summary>
+    /// <summary>Solo el propietario cambia las condiciones del negocio.</summary>
     [HttpPut("configuracion")]
     [Authorize(Roles = Roles.SuperAdministrador)]
     public async Task<IActionResult> Actualizar(

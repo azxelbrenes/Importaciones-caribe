@@ -1,24 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
 import { FinanciamientoService } from '../../../core/services/financiamiento.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { Roles } from '../../../core/auth/auth.model';
 import { ConfiguracionFinanciamiento } from '../../../core/models/financiamiento.model';
 import { EncabezadoSeccionComponent } from '../comunes/encabezado-seccion.component';
 
-interface CuotaVista {
-  plazo: number;
-  cuota: number;
-  intereses: number;
-  total: number;
-}
-
 @Component({
   selector: 'app-financiamiento',
   standalone: true,
-  imports: [FormsModule, CurrencyPipe, DecimalPipe, EncabezadoSeccionComponent],
+  imports: [FormsModule, CurrencyPipe, EncabezadoSeccionComponent],
   templateUrl: './financiamiento.component.html',
   styleUrl: './financiamiento.component.scss'
 })
@@ -33,22 +25,17 @@ export class FinanciamientoComponent {
   error = signal<string | null>(null);
   mensaje = signal<string | null>(null);
 
-  // ── Campos ──
   activo = signal(false);
   prima = signal(50);
-  tasa = signal(0);
   plazoMin = signal(12);
   plazoMax = signal(36);
   plazos = signal('12,24,36');
-  textoLegal = signal('');
 
-  /// Precio de ejemplo para la vista previa. Solo sirve para ver cómo
-  /// quedan las cuotas antes de guardar; no se guarda.
+  /// Precio de ejemplo para la vista previa. No se guarda.
   precioEjemplo = signal(30000);
 
-  /// Cambiar la tasa es solo del propietario: tiene implicaciones
-  /// legales y hay que poder responder por ella. El backend lo exige
-  /// igual con [Authorize].
+  /// Cambiar las condiciones es solo del propietario. El backend lo
+  /// exige igual con [Authorize].
   puedeEditar = computed(() => this.auth.tieneAlgunRol([Roles.SuperAdministrador]));
 
   plazosLista = computed(() =>
@@ -59,55 +46,26 @@ export class FinanciamientoComponent {
       .filter((p, i, arr) => arr.indexOf(p) === i)
       .sort((a, b) => a - b));
 
-  /// La misma fórmula del backend —sistema francés, cuota fija—, para
-  /// ver el efecto de un cambio antes de guardarlo. Al publicar, el
-  /// servidor recalcula con su propia implementación.
-  vistaPrevia = computed<CuotaVista[]>(() => {
-    const precio = Number(this.precioEjemplo()) || 0;
-    const tasa = Number(this.tasa()) || 0;
-
-    if (precio <= 0 || tasa <= 0) return [];
-
-    const financiado = precio - precio * ((Number(this.prima()) || 0) / 100);
-    const i = tasa / 100 / 12;
-
-    return this.plazosLista().map(n => {
-      const cuota = financiado * i / (1 - Math.pow(1 + i, -n));
-      const total = cuota * n;
-
-      return {
-        plazo: n,
-        cuota: Math.round(cuota * 100) / 100,
-        intereses: Math.round((total - financiado) * 100) / 100,
-        total: Math.round((total + (precio - financiado)) * 100) / 100
-      };
-    });
-  });
-
-  primaEjemplo = computed(() =>
-    (Number(this.precioEjemplo()) || 0) * ((Number(this.prima()) || 0) / 100));
-
-  /// Qué impide activar, en palabras. Son las mismas dos reglas que el
-  /// backend usa para rechazar el guardado.
-  bloqueos = computed(() => {
-    const b: string[] = [];
-    if (!this.activo()) return b;
-    if ((Number(this.tasa()) || 0) <= 0) b.push('falta la tasa anual');
-    if (!this.textoLegal().trim()) b.push('falta el texto legal');
-    return b;
-  });
-
   errorPlazos = computed(() => {
     const lista = this.plazosLista();
     if (lista.length === 0) return 'Indicá al menos un plazo.';
+
     const fuera = lista.filter(p => p < this.plazoMin() || p > this.plazoMax());
     return fuera.length
       ? `Fuera del rango ${this.plazoMin()}–${this.plazoMax()}: ${fuera.join(', ')}.`
       : null;
   });
 
-  valido = computed(() =>
-    this.bloqueos().length === 0 && this.errorPlazos() === null);
+  primaEjemplo = computed(() =>
+    (Number(this.precioEjemplo()) || 0) * ((Number(this.prima()) || 0) / 100));
+
+  /// El mensaje que le llega al dueño por WhatsApp, para ver cómo
+  /// queda antes de activar.
+  mensajeEjemplo = computed(() => {
+    const plazo = this.plazosLista()[0] ?? 12;
+    return `Hola, me interesa el Mitsubishi L200 2022 con financiamiento ` +
+           `a ${plazo} meses. ¿Qué condiciones tienen?`;
+  });
 
   constructor() {
     this.servicio.obtener().subscribe({
@@ -115,11 +73,9 @@ export class FinanciamientoComponent {
         this.guardado.set(c);
         this.activo.set(c.activo);
         this.prima.set(c.porcentajePrima);
-        this.tasa.set(c.tasaAnual);
         this.plazoMin.set(c.plazoMinimoMeses);
         this.plazoMax.set(c.plazoMaximoMeses);
         this.plazos.set(c.plazosDisponibles);
-        this.textoLegal.set(c.textoLegal ?? '');
         this.cargando.set(false);
       },
       error: () => {
@@ -130,7 +86,7 @@ export class FinanciamientoComponent {
   }
 
   guardar(): void {
-    if (!this.valido() || this.guardando() || !this.puedeEditar()) return;
+    if (this.errorPlazos() || this.guardando() || !this.puedeEditar()) return;
 
     this.guardando.set(true);
     this.error.set(null);
@@ -139,17 +95,15 @@ export class FinanciamientoComponent {
     this.servicio.actualizar({
       activo: this.activo(),
       porcentajePrima: Number(this.prima()) || 0,
-      tasaAnual: Number(this.tasa()) || 0,
       plazoMinimoMeses: Number(this.plazoMin()) || 12,
       plazoMaximoMeses: Number(this.plazoMax()) || 36,
-      plazosDisponibles: this.plazosLista().join(','),
-      textoLegal: this.textoLegal().trim() || null
+      plazosDisponibles: this.plazosLista().join(',')
     }).subscribe({
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(this.activo()
-          ? 'Guardado. Las cuotas ya se muestran en los vehículos que aceptan financiamiento.'
-          : 'Guardado. El financiamiento está apagado: el sitio no muestra cuotas.');
+          ? 'Guardado. Los vehículos financiables ya muestran los plazos en el sitio.'
+          : 'Guardado. El financiamiento está apagado en todo el sitio.');
 
         this.servicio.obtener().subscribe(c => this.guardado.set(c));
       },
