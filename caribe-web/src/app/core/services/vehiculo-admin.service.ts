@@ -9,7 +9,7 @@ import { Pagina } from '../models/pagina.model';
 export class VehiculoAdminService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/vehiculos`;
-
+ 
   listar(filtro: FiltroVehiculoAdmin = {}): Observable<Pagina<VehiculoAdmin>> {
     let params = new HttpParams();
 

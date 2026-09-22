@@ -74,6 +74,17 @@ public class AuthController : ControladorBase
         return Ok(new { mensaje = "Sesión cerrada." });
     }
 
+    // ══════════════════ PERFIL ══════════════════
+
+    /// <summary>
+    /// La propia cuenta. Lo usa la pantalla Mi cuenta para saber si el
+    /// doble factor esta activo, dato que no viaja en el token.
+    /// </summary>
+    [HttpGet("perfil")]
+    [Authorize]
+    public async Task<IActionResult> Perfil(CancellationToken ct)
+        => Resolver(await _ln.ObtenerPerfilAsync(UsuarioActual, ct));
+
     // ══════════════════ RECUPERACION ══════════════════
 
     /// <summary>

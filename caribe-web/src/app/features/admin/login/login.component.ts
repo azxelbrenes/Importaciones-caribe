@@ -39,6 +39,9 @@ export class LoginComponent {
 
     if (m === 'inactividad')
       this.motivo.set('Su sesión se cerró por inactividad.');
+
+    if (m === 'password')
+      this.motivo.set('Contraseña cambiada. Entrá con la nueva.');
   }
 
   get valido(): boolean {

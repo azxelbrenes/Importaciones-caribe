@@ -62,6 +62,15 @@ public interface IUsuarioLN
     Task<Respuesta<int>> CerrarOtrasSesionesAsync(
         string usuarioId, string? refreshActual, CancellationToken ct = default);
 
+    // ══════════════════ PERFIL ══════════════════
+
+    /// <summary>
+    /// Datos de la propia cuenta, incluido si el doble factor esta
+    /// activo. Cualquier rol autenticado puede consultar el suyo.
+    /// </summary>
+    Task<Respuesta<PerfilDto>> ObtenerPerfilAsync(
+        string usuarioId, CancellationToken ct = default);
+
     // ══════════════════ GESTION ══════════════════
 
     Task<Respuesta<IEnumerable<UsuarioDto>>> ListarAsync(

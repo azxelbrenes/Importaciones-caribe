@@ -1,0 +1,215 @@
+<app-encabezado-seccion
+  titulo="Mi cuenta"
+  descripcion="Verificación en dos pasos, contraseña y sesiones abiertas." />
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+@if (cargando()) {
+  <p class="cargando">Cargando…</p>
+} @else if (perfil(); as p) {
+
+  <!-- ══════════ DATOS ══════════ -->
+  <section class="panel datos">
+    <div>
+      <strong>{{ p.nombreCompleto }}</strong>
+      <span>{{ p.email }}</span>
+    </div>
+    <dl>
+      <div><dt>Rol</dt><dd>{{ auth.rolPrincipal() }}</dd></div>
+      <div><dt>Último acceso</dt><dd>{{ fecha(p.ultimoAcceso) }}</dd></div>
+    </dl>
+  </section>
+
+  <div class="columnas">
+
+    <!-- ══════════ DOBLE FACTOR ══════════ -->
+    <section class="panel">
+      <h2>Verificación en dos pasos</h2>
+      <p class="ayuda">
+        Además de la contraseña, pide un código de una aplicación del
+        teléfono. Si alguien roba la contraseña, con eso solo no entra.
+      </p>
+
+      @if (p.dobleFactorActivo) {
+
+        <p class="estado activo">◆ Activada</p>
+
+        @if (!desactivando()) {
+          <button class="btn-borde" type="button" (click)="desactivando.set(true)">
+            Desactivar
+          </button>
+        } @else {
+          <!-- Se pide la contraseña: si alguien encuentra una sesión
+               abierta, no debería poder quitar esta protección. -->
+          <div class="campo">
+            <label for="d-pass">Tu contraseña, para confirmar</label>
+            <input id="d-pass" type="password" autocomplete="current-password"
+                   [ngModel]="passwordDesactivar()"
+                   (ngModelChange)="passwordDesactivar.set($event)"
+                   (keyup.enter)="desactivarDobleFactor()">
+          </div>
+          <div class="botones">
+            <button class="btn-borde" type="button"
+                    (click)="desactivando.set(false); passwordDesactivar.set('')">
+              Cancelar
+            </button>
+            <button class="btn-peligro" type="button"
+                    [disabled]="!passwordDesactivar() || procesando()"
+                    (click)="desactivarDobleFactor()">
+              Desactivar
+            </button>
+          </div>
+        }
+
+      } @else if (config(); as c) {
+
+        <ol class="pasos">
+          <li>
+            Instalá <strong>Google Authenticator</strong>, Authy o
+            Microsoft Authenticator en tu teléfono.
+          </li>
+          <li>
+            Agregá una cuenta nueva y escaneá este código:
+
+            @if (qr()) {
+              <img class="qr" [src]="qr()" alt="Código QR de verificación"
+                   width="220" height="220">
+            }
+
+            <span class="o">¿No podés escanear? Escribí esta clave:</span>
+            <div class="clave">
+              <code>{{ c.claveManual }}</code>
+              <button class="btn-borde" type="button" (click)="copiarClave()">
+                @if (copiado()) { Copiada ✓ } @else { Copiar }
+              </button>
+            </div>
+          </li>
+          <li>Escribí el código de 6 dígitos que aparece en la aplicación.</li>
+        </ol>
+
+        <div class="campo">
+          <label for="c-codigo">Código</label>
+          <input id="c-codigo" type="text" inputmode="numeric"
+                 autocomplete="one-time-code" maxlength="6"
+                 placeholder="000000" class="codigo"
+                 [ngModel]="codigo()"
+                 (ngModelChange)="alEscribirCodigo($event)"
+                 (keyup.enter)="activarDobleFactor()">
+        </div>
+
+        <!-- Se exige el código antes de activar: si se activara sin
+             confirmar, alguien que configuró mal la aplicación quedaría
+             bloqueado fuera de su propia cuenta. -->
+        <div class="botones">
+          <button class="btn-borde" type="button" (click)="cancelarDobleFactor()">
+            Cancelar
+          </button>
+          <button class="btn-principal" type="button"
+                  [disabled]="codigo().length !== 6 || procesando()"
+                  (click)="activarDobleFactor()">
+            @if (procesando()) { Verificando… } @else { Activar }
+          </button>
+        </div>
+
+      } @else {
+
+        <p class="estado inactivo">◇ Sin activar</p>
+        <button class="btn-principal" type="button"
+                [disabled]="procesando()"
+                (click)="iniciarDobleFactor()">
+          Activar verificación en dos pasos
+        </button>
+      }
+    </section>
+
+    <!-- ══════════ CONTRASEÑA ══════════ -->
+    <section class="panel">
+      <h2>Cambiar contraseña</h2>
+      <p class="ayuda">
+        Al cambiarla se cierran todas las sesiones abiertas, incluida
+        esta. Vas a tener que entrar de nuevo.
+      </p>
+
+      <div class="campo">
+        <label for="p-actual">Contraseña actual</label>
+        <input id="p-actual" type="password" autocomplete="current-password"
+               [ngModel]="passActual()" (ngModelChange)="passActual.set($event)">
+      </div>
+
+      <div class="campo">
+        <label for="p-nueva">Contraseña nueva</label>
+        <input id="p-nueva" type="password" autocomplete="new-password"
+               [ngModel]="passNueva()" (ngModelChange)="passNueva.set($event)">
+      </div>
+
+      <ul class="reglas">
+        <li [class.cumple]="reglas().largo">{{ reglas().largo ? '◆' : '◇' }} Al menos 10 caracteres</li>
+        <li [class.cumple]="reglas().letra">{{ reglas().letra ? '◆' : '◇' }} Una letra</li>
+        <li [class.cumple]="reglas().numero">{{ reglas().numero ? '◆' : '◇' }} Un número</li>
+        <li [class.cumple]="reglas().distinta">{{ reglas().distinta ? '◆' : '◇' }} Distinta de la actual</li>
+      </ul>
+
+      <div class="campo">
+        <label for="p-conf">Repetí la contraseña nueva</label>
+        <input id="p-conf" type="password" autocomplete="new-password"
+               [ngModel]="passConfirmar()" (ngModelChange)="passConfirmar.set($event)"
+               (keyup.enter)="cambiarPassword()">
+        @if (passConfirmar().length > 0 && !reglas().coinciden) {
+          <small class="no-coincide">No coinciden.</small>
+        }
+      </div>
+
+      <button class="btn-principal ancho" type="button"
+              [disabled]="!passValida() || cambiandoPass()"
+              (click)="cambiarPassword()">
+        @if (cambiandoPass()) { Cambiando… } @else { Cambiar contraseña }
+      </button>
+    </section>
+  </div>
+
+  <!-- ══════════ SESIONES ══════════ -->
+  <section class="panel">
+    <div class="cabecera-sesiones">
+      <div>
+        <h2>Sesiones abiertas</h2>
+        <p class="ayuda">
+          Si ves una que no reconocés, cerrá las demás. La tuya se mantiene.
+        </p>
+      </div>
+
+      @if (otrasSesiones() > 0) {
+        <button class="btn-peligro" type="button" (click)="confirmarCerrarOtras.set(true)">
+          Cerrar las otras ({{ otrasSesiones() }})
+        </button>
+      }
+    </div>
+
+    @if (sesiones().length === 0) {
+      <p class="cargando">No hay sesiones registradas.</p>
+    } @else {
+      <ul class="sesiones">
+        @for (s of sesiones(); track s.id) {
+          <li [class.actual]="s.esLaActual">
+            <div>
+              <strong>{{ s.ip ?? 'Origen desconocido' }}</strong>
+              <small>Iniciada el {{ fecha(s.creadoEn) }}</small>
+            </div>
+            @if (s.esLaActual) { <span class="pastilla contactada">Esta sesión</span> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@if (confirmarCerrarOtras()) {
+  <app-confirmar
+    titulo="Cerrar las otras sesiones"
+    [mensaje]="'Se van a cerrar ' + otrasSesiones() + ' ' +
+               (otrasSesiones() === 1 ? 'sesión' : 'sesiones') +
+               ' en otros dispositivos. La tuya se mantiene abierta.'"
+    textoAceptar="Cerrar"
+    (confirmar)="cerrarOtras()"
+    (cancelar)="confirmarCerrarOtras.set(false)" />
+}
