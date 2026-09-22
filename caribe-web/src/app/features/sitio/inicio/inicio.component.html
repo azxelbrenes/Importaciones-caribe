@@ -91,6 +91,128 @@
   </section>
 }
 
+<!-- ══════════ CÓMO FUNCIONA ══════════ -->
+<section class="bloque" id="como-funciona">
+  <div class="envoltura">
+    <header class="cabecera centrada">
+      <div>
+        <p class="etq">El proceso</p>
+        <h2>Cómo funciona</h2>
+        <p class="intro">
+          Importar un carro parece complicado. Con nosotros son cuatro
+          pasos, y de los trámites nos encargamos nosotros.
+        </p>
+      </div>
+    </header>
+
+    <ol class="pasos">
+      @for (p of pasos; track p.titulo; let i = $index) {
+        <li>
+          <span class="numero">{{ i + 1 }}</span>
+          <p class="titulo">{{ p.titulo }}</p>
+          <p class="texto">{{ p.texto }}</p>
+        </li>
+      }
+    </ol>
+  </div>
+</section>
+
+<!-- ══════════ FINANCIAMIENTO ══════════ -->
+<section class="bloque" id="financiamiento">
+  <div class="envoltura">
+    <div class="financiamiento">
+      <div class="texto-fin">
+        <p class="etq">Formas de pago</p>
+        <h2>De contado o financiado</h2>
+
+        @if (financiamiento()?.activo) {
+          <p class="intro">
+            Pagás una prima del {{ financiamiento()!.porcentajePrima }}% y el
+            resto en cuotas. Las condiciones las acordamos con vos
+            directamente, según el vehículo y el plazo.
+          </p>
+
+          <div class="plazos">
+            @for (p of financiamiento()!.plazos; track p) {
+              <span>{{ p }} meses</span>
+            }
+          </div>
+
+          <p class="aclara">
+            No publicamos tasas: cada caso es distinto y preferimos
+            conversarlo antes de que decidas.
+          </p>
+        } @else {
+          <p class="intro">
+            Trabajamos de contado. Escribinos y conversamos las opciones
+            de pago para el vehículo que te interese.
+          </p>
+        }
+
+        <a class="principal" [href]="contacto.whatsappUrl(mensajeFinanciamiento)"
+           target="_blank" rel="noopener">
+          <app-icono nombre="chat" [tam]="18" />
+          Consultar opciones
+        </a>
+      </div>
+
+      <ul class="ventajas">
+        <li>
+          <strong>Sin cobros escondidos</strong>
+          El precio que ves ya trae impuestos, traslado y trámites.
+        </li>
+        <li>
+          <strong>Precio cerrado</strong>
+          Lo que acordamos es lo que pagás, con vigencia escrita.
+        </li>
+        <li>
+          <strong>Trato directo</strong>
+          Hablás siempre con la misma persona, por WhatsApp.
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ NOSOTROS ══════════ -->
+<section class="bloque" id="nosotros">
+  <div class="envoltura">
+    <div class="nosotros">
+      <div>
+        <p class="etq">Quiénes somos</p>
+        <h2>Cinco años trayendo carros</h2>
+        <p class="parrafo">
+          Importaciones del Caribe CR nació de algo simple: traer el
+          vehículo que alguien quiere, al precio que se le prometió.
+          Llevamos más de <strong>veinte vehículos entregados</strong> y
+          cinco años aprendiendo dónde están los mejores precios en
+          Estados Unidos y cómo moverlos hasta acá sin sobresaltos.
+        </p>
+        <p class="parrafo">
+          No tenemos sala de ventas ni vendedores: por eso el precio es
+          más bajo y la respuesta más rápida. Nos escribís, conversamos,
+          y si el carro es para vos lo traemos.
+        </p>
+      </div>
+
+      <dl class="numeros">
+        <div>
+          <dt>Vehículos entregados</dt>
+          <dd>+20</dd>
+        </div>
+        <div>
+          <dt>Años importando</dt>
+          <dd>5</dd>
+        </div>
+        <div>
+          <dt>Precio final</dt>
+          <dd>Cerrado</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════ ¿NO LO ENCONTRÁS? ══════════ -->
 <!-- Reemplaza al formulario "a tu medida": quien no ve lo que busca
      es el cliente más claro que llega al sitio, y no debe irse sin

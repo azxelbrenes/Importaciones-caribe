@@ -7,6 +7,7 @@ import { VehiculoPublicoService } from '../../../core/services/vehiculo-publico.
 import { SeoService } from '../../../core/services/seo.service';
 import { Contacto } from '../../../core/config/contacto';
 import { VehiculoPublico } from '../../../core/models/vehiculo-publico.model';
+import { FinanciamientoPublico } from '../../../core/models/financiamiento.model';
 import { TarjetaVehiculoComponent } from '../comunes/tarjeta-vehiculo.component';
 import { IconoComponent } from '../comunes/icono.component';
 
@@ -22,6 +23,7 @@ export class InicioComponent {
   readonly contacto = Contacto;
 
   destacado = signal<VehiculoPublico | null>(null);
+  financiamiento = signal<FinanciamientoPublico | null>(null);
   recientes = signal<VehiculoPublico[]>([]);
   total = signal(0);
   cargando = signal(true);
@@ -31,6 +33,31 @@ export class InicioComponent {
 
   readonly mensajeBusqueda =
     'Hola, busco un vehículo que no vi en el catálogo. ¿Me pueden ayudar a encontrarlo?';
+
+  readonly mensajeFinanciamiento =
+    'Hola, quiero consultar por el financiamiento de un vehículo. ¿Cómo funciona?';
+
+  /// Los pasos del proceso. Quien nunca importó un carro no sabe qué
+  /// tiene que hacer ni cuándo paga: contarlo quita la mayor barrera
+  /// de esta venta.
+  readonly pasos = [
+    {
+      titulo: 'Elegís el vehículo',
+      texto: 'Del catálogo, o decinos qué buscás y lo conseguimos en Estados Unidos.'
+    },
+    {
+      titulo: 'Confirmamos el precio final',
+      texto: 'Un solo número, puesto en Costa Rica. Impuestos y trámites incluidos.'
+    },
+    {
+      titulo: 'Lo traemos',
+      texto: 'Compra, traslado y nacionalización. Te vamos contando en qué va.'
+    },
+    {
+      titulo: 'Lo recibís con placas',
+      texto: 'Inscrito y a tu nombre, listo para manejar.'
+    }
+  ];
 
   constructor() {
     inject(SeoService).setear({
@@ -46,9 +73,11 @@ export class InicioComponent {
     // tardan lo que tarda la más lenta, no la suma.
     forkJoin({
       destacado: this.servicio.destacado(),
-      recientes: this.servicio.listar({ porPagina: 7 })
+      recientes: this.servicio.listar({ porPagina: 7 }),
+      financiamiento: this.servicio.financiamiento()
     }).subscribe({
-      next: ({ destacado, recientes }) => {
+      next: ({ destacado, recientes, financiamiento }) => {
+        this.financiamiento.set(financiamiento);
         this.destacado.set(destacado);
 
         // El destacado ya se muestra arriba: se saca de la lista de
