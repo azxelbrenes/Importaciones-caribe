@@ -1,0 +1,190 @@
+<app-encabezado-seccion
+  titulo="Solicitudes"
+  descripcion="Clientes que tocaron &quot;Me interesa&quot; en un vehículo. Respondé pronto: es lo que más decide la venta.">
+  @if (puedeGestionar()) {
+    <button class="btn-borde" type="button" (click)="confirmarLote.set(true)">
+      Archivar cerradas antiguas
+    </button>
+  }
+</app-encabezado-seccion>
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+@if (nuevasEnPagina() > 0 && filtroEstado() === null) {
+  <p class="nota alerta">
+    {{ nuevasEnPagina() }}
+    {{ nuevasEnPagina() === 1 ? 'solicitud nueva espera' : 'solicitudes nuevas esperan' }}
+    respuesta.
+  </p>
+}
+
+<div class="filtros">
+  <div class="campo">
+    <label for="s-buscar">Buscar</label>
+    <input id="s-buscar" type="search" placeholder="Nombre o WhatsApp…"
+           [ngModel]="busqueda()"
+           (ngModelChange)="busqueda.set($event); buscarConEspera()">
+  </div>
+
+  <div class="campo">
+    <label for="s-estado">Estado</label>
+    <select id="s-estado" [ngModel]="filtroEstado()"
+            (ngModelChange)="filtroEstado.set($event); filtrar()">
+      <option [ngValue]="null">Todos</option>
+      @for (e of estadosElegibles(); track e.valor) {
+        <option [ngValue]="e.valor">{{ e.texto }}</option>
+      }
+    </select>
+  </div>
+
+  <label class="casilla">
+    <input type="checkbox" [ngModel]="verArchivadas()"
+           (ngModelChange)="verArchivadas.set($event); filtrar()">
+    <span>Ver archivadas</span>
+  </label>
+</div>
+
+@if (cargando()) {
+  <div class="esqueleto">
+    @for (i of [1,2,3,4]; track i) { <div class="fila"></div> }
+  </div>
+} @else if (solicitudes().length === 0) {
+  <div class="vacio">
+    <p class="titulo">No hay solicitudes</p>
+    <p>
+      Aparecen acá cuando un cliente toca "Me interesa" en la ficha de
+      un vehículo del catálogo.
+    </p>
+  </div>
+} @else {
+
+  <ul class="bandeja">
+    @for (s of solicitudes(); track s.id) {
+      <li [class.nueva]="s.estado === estadoNueva()" (click)="abrir(s)">
+        <div class="quien">
+          <strong>{{ s.nombre }}</strong>
+          <small>{{ s.whatsapp }}</small>
+        </div>
+
+        <div class="que">
+          <span class="carro">{{ vehiculo(s) }}</span>
+          <span class="pago" [class.financiado]="s.formaPago === FINANCIADO">
+            {{ pago(s) }}
+          </span>
+        </div>
+
+        <div class="cuando">
+          <span class="pastilla" [class]="claseEstado(s.estado)">
+            {{ textoEstado(s.estado) }}
+          </span>
+          <small>{{ hace(s.creadoEn) }}</small>
+          @if (s.cantidadNotas > 0) {
+            <small class="notas">✎ {{ s.cantidadNotas }}</small>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (totalPaginas() > 1) {
+    <nav class="paginacion">
+      <button type="button" [disabled]="pagina() === 1" (click)="irAPagina(pagina() - 1)">Anterior</button>
+      <span>Página {{ pagina() }} de {{ totalPaginas() }}</span>
+      <button type="button" [disabled]="pagina() === totalPaginas()" (click)="irAPagina(pagina() + 1)">Siguiente</button>
+    </nav>
+  }
+
+  <p class="conteo">{{ total() }} {{ total() === 1 ? 'solicitud' : 'solicitudes' }}</p>
+}
+
+<!-- ══════════ DETALLE ══════════ -->
+@if (abierta(); as d) {
+  <div class="fondo" (click)="cerrar()">
+    <aside class="detalle" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p class="nombre">{{ d.nombre }}</p>
+          <p class="sub">{{ d.whatsapp }} · {{ fecha(d.creadoEn) }}</p>
+        </div>
+        <button class="x" type="button" aria-label="Cerrar" (click)="cerrar()">✕</button>
+      </header>
+
+      <div class="bloque">
+        <p class="etq">Le interesa</p>
+        <p class="carro-grande">{{ vehiculo(d) }}</p>
+        <p class="pago-grande" [class.financiado]="d.formaPago === FINANCIADO">{{ pago(d) }}</p>
+
+        @if (d.presupuestoMax) {
+          <p class="extra">Presupuesto hasta {{ d.presupuestoMax | currency:'USD':'symbol':'1.0-0' }}</p>
+        }
+        @if (d.detalles) {
+          <p class="extra">"{{ d.detalles }}"</p>
+        }
+      </div>
+
+      <button class="btn-principal wa" type="button" (click)="escribir()">
+        Escribir por WhatsApp
+      </button>
+
+      <div class="bloque">
+        <p class="etq">Estado</p>
+        <div class="estados">
+          @for (e of estadosElegibles(); track e.valor) {
+            <button type="button" [class.activo]="d.estado === e.valor"
+                    (click)="cambiarEstado(e.valor)">{{ e.texto }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="bloque">
+        <p class="etq">Notas internas</p>
+
+        <div class="nota-nueva">
+          <textarea rows="2" maxlength="2000" placeholder="Qué se habló, qué quedó pendiente…"
+                    [ngModel]="nuevaNota()" (ngModelChange)="nuevaNota.set($event)"></textarea>
+          <button class="btn-borde" type="button"
+                  [disabled]="nuevaNota().trim().length < 2 || guardandoNota()"
+                  (click)="agregarNota()">Agregar</button>
+        </div>
+
+        @for (n of d.notas; track n.id) {
+          <div class="nota-item">
+            <p>{{ n.nota }}</p>
+            <small>{{ fecha(n.creadoEn) }}</small>
+          </div>
+        } @empty {
+          <p class="sin-notas">Sin notas todavía.</p>
+        }
+      </div>
+
+      <footer>
+        @if (d.estado !== estadoArchivada()) {
+          <button class="btn-borde" type="button" (click)="archivar()">Archivar</button>
+        }
+        @if (puedeEliminar() && sePuedeEliminar(d)) {
+          <button class="btn-peligro" type="button" (click)="aEliminar.set(d)">Eliminar</button>
+        }
+      </footer>
+    </aside>
+  </div>
+}
+
+@if (aEliminar(); as d) {
+  <app-confirmar
+    titulo="Eliminar solicitud"
+    [mensaje]="'Se borra definitivamente la solicitud de ' + d.nombre +
+               '. Usalo solo para spam o duplicados: el conteo del mes se conserva en las estadísticas.'"
+    textoAceptar="Eliminar"
+    (confirmar)="confirmarEliminar()"
+    (cancelar)="aEliminar.set(null)" />
+}
+
+@if (confirmarLote()) {
+  <app-confirmar
+    titulo="Archivar cerradas antiguas"
+    mensaje="Se archivan las solicitudes cerradas o descartadas de hace más de 6 meses. No se borran: siguen contando en las estadísticas y se pueden ver con 'Ver archivadas'."
+    textoAceptar="Archivar"
+    (confirmar)="archivarLote()"
+    (cancelar)="confirmarLote.set(false)" />
+}

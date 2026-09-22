@@ -1,0 +1,120 @@
+<app-encabezado-seccion
+  [titulo]="saludo()"
+  [descripcion]="'Cómo va el negocio en ' + mesActual() + '.'">
+  <a class="btn-principal" routerLink="/admin/vehiculos/nuevo">+ Nuevo vehículo</a>
+</app-encabezado-seccion>
+
+@if (error()) { <p class="nota error">{{ error() }}</p> }
+
+@if (cargando()) {
+  <div class="esqueleto">
+    @for (i of [1,2,3]; track i) { <div class="fila"></div> }
+  </div>
+} @else if (resumen(); as r) {
+
+  <!-- Lo urgente primero: si hay clientes esperando, es lo único que
+       importa antes de mirar números. -->
+  @if (r.solicitudesNuevas > 0) {
+    <a class="urgente" routerLink="/admin/solicitudes">
+      <strong>{{ r.solicitudesNuevas }}</strong>
+      <span>
+        {{ r.solicitudesNuevas === 1 ? 'cliente espera' : 'clientes esperan' }}
+        respuesta
+      </span>
+      <em>Atender →</em>
+    </a>
+  }
+
+  <!-- ── Cifras del mes ── -->
+  <div class="cifras">
+    <div class="cifra principal">
+      <p class="etq">Ingresos del mes</p>
+      <strong>{{ r.ingresosMes | currency:'USD':'symbol':'1.0-0' }}</strong>
+      <small>{{ r.vendidosMes }} {{ r.vendidosMes === 1 ? 'vehículo vendido' : 'vehículos vendidos' }}</small>
+    </div>
+
+    <div class="cifra">
+      <p class="etq">Ganancia del mes</p>
+      <strong class="verde">{{ r.margenMes | currency:'USD':'symbol':'1.0-0' }}</strong>
+      <small>{{ margenPorcentaje() | number:'1.0-1' }}% de los ingresos</small>
+    </div>
+
+    <div class="cifra">
+      <p class="etq">Tiempo de respuesta</p>
+      <strong [class]="claseTiempo(r.minutosPromedioRespuesta)">
+        {{ tiempo(r.minutosPromedioRespuesta) }}
+      </strong>
+      <small>promedio este mes</small>
+    </div>
+
+    <div class="cifra">
+      <p class="etq">Días para vender</p>
+      <strong>{{ r.diasPromedioVenta ? (r.diasPromedioVenta | number:'1.0-0') : '—' }}</strong>
+      <small>desde que se publica</small>
+    </div>
+  </div>
+
+  <!-- ── Inventario ── -->
+  <div class="inventario">
+    <a routerLink="/admin/vehiculos"><strong>{{ r.vehiculosPublicados }}</strong><span>Disponibles</span></a>
+    <a routerLink="/admin/vehiculos"><strong>{{ r.vehiculosEnTrato }}</strong><span>En trato</span></a>
+    <a routerLink="/admin/vehiculos"><strong>{{ r.vehiculosEnTransito }}</strong><span>En tránsito</span></a>
+    <div><strong>{{ r.visitasMes }}</strong><span>Visitas a fichas</span></div>
+    <div><strong>{{ r.solicitudesMes }}</strong><span>Solicitudes del mes</span></div>
+  </div>
+
+  <div class="columnas">
+
+    <!-- ── Ventas ── -->
+    <section class="panel">
+      <h2>Ingresos · últimos 6 meses</h2>
+
+      @if (maxIngresos() <= 1) {
+        <p class="sin-datos">Todavía no hay ventas registradas.</p>
+      } @else {
+        <div class="barras">
+          @for (v of ventas(); track v.anio + '-' + v.mes; let ultimo = $last) {
+            <div class="barra" [class.actual]="ultimo">
+              <span class="valor">
+                @if (v.ingresos > 0) { {{ v.ingresos / 1000 | number:'1.0-0' }}k }
+              </span>
+              <div class="pila">
+                <div class="relleno" [style.height.%]="alto(v.ingresos, maxIngresos())"></div>
+              </div>
+              <span class="mes">{{ nombreMes(v) }}</span>
+              <small>{{ v.cantidad }}</small>
+            </div>
+          }
+        </div>
+        <p class="leyenda">Miles de dólares · debajo, vehículos vendidos</p>
+      }
+    </section>
+
+    <!-- ── Embudo ── -->
+    <section class="panel">
+      <h2>Embudo de solicitudes</h2>
+
+      @if (totalSolicitudes() === 0) {
+        <p class="sin-datos">Todavía no llegaron solicitudes.</p>
+      } @else {
+        <ul class="embudo">
+          @for (e of pipeline(); track e.estado) {
+            <li>
+              <span class="nombre">{{ e.etiqueta }}</span>
+              <div class="pista">
+                <div class="tramo" [class]="claseEtapa(e.etiqueta)"
+                     [style.width.%]="alto(e.cantidad, maxEtapa())"></div>
+              </div>
+              <span class="num">{{ e.cantidad }}</span>
+            </li>
+          }
+        </ul>
+
+        <p class="conversion">
+          Conversión: <strong>{{ conversion() | number:'1.0-1' }}%</strong>
+          <span>de {{ totalSolicitudes() }} solicitudes terminaron en venta</span>
+        </p>
+      }
+    </section>
+  </div>
+}

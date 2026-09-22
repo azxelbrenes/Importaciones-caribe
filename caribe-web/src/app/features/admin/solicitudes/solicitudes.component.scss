@@ -1,0 +1,223 @@
+.filtros {
+  grid-template-columns: 2fr 1fr auto;
+
+  @media (max-width: 760px) { grid-template-columns: 1fr 1fr; }
+}
+
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+
+  input { width: 18px; height: 18px; accent-color: var(--blue); }
+}
+
+.bandeja {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+
+  li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    position: relative;
+    transition: background .15s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: rgba(255, 255, 255, .025); }
+
+    // Las nuevas llevan la franja roja: son las que esperan respuesta,
+    // y tienen que saltar a la vista sin leer la pastilla.
+    &.nueva::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--red);
+    }
+
+    @media (max-width: 760px) {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+}
+
+.quien {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  strong { font-size: 14.5px; }
+  small { font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+}
+
+.que {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+
+  .carro { font-size: 13.5px; }
+}
+
+.pago {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+
+  &.financiado { color: var(--ok); }
+}
+
+.cuando {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  small { font-size: 11px; color: var(--dim); }
+  .notas { font-family: var(--mono); }
+
+  @media (max-width: 760px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+}
+
+// ── Detalle lateral ──
+
+.fondo {
+  place-items: stretch end;
+  padding: 0;
+}
+
+.detalle {
+  width: 100%;
+  max-width: 440px;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--line2);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .nombre {
+    font-family: var(--disp);
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  .sub { font-family: var(--mono); font-size: 11px; color: var(--dim); margin: 5px 0 0; }
+
+  .x {
+    background: none;
+    border: 1px solid var(--line2);
+    color: var(--muted);
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+
+    &:hover { color: var(--txt); border-color: var(--blue); }
+  }
+
+  footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+}
+
+.bloque {
+  .etq {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin: 0 0 8px;
+  }
+
+  .carro-grande { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+
+  .pago-grande {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0;
+
+    &.financiado { color: var(--ok); }
+  }
+
+  .extra { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+}
+
+.wa { width: 100%; padding: 14px; background: var(--ok); }
+
+.estados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  button {
+    background: transparent;
+    border: 1px solid var(--line2);
+    color: #A9B7C5;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .06em;
+    padding: 7px 11px;
+
+    &:hover { border-color: var(--blue); color: var(--blue); }
+    &.activo { background: var(--blue); border-color: var(--blue); color: #fff; }
+  }
+}
+
+.nota-nueva {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  textarea { min-height: 60px; }
+  button { align-self: flex-end; }
+}
+
+.nota-item {
+  padding: 10px 12px;
+  border-left: 2px solid var(--line2);
+  background: rgba(255, 255, 255, .02);
+  margin-bottom: 8px;
+
+  p { font-size: 13.5px; margin: 0 0 4px; white-space: pre-wrap; }
+  small { font-family: var(--mono); font-size: 10.5px; color: var(--dim); }
+}
+
+.sin-notas { font-size: 12.5px; color: var(--dim); margin: 0; }
