@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, map, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginResultado, Roles, Token } from './auth.model';
 
@@ -58,18 +58,40 @@ export class AuthService {
       }));
   }
 
+  /// La renovación que está en curso, si hay una.
+  ///
+  /// Existe por un error real: cuando el token vence, una pantalla que
+  /// pide varias cosas a la vez recibe varios 401 juntos. Si cada uno
+  /// pidiera renovar por su cuenta, el primero cambia la cookie y el
+  /// segundo llega con la anterior, ya usada. El backend lo detecta
+  /// como un token robado y cierra TODAS las sesiones.
+  ///
+  /// Con esto hay una sola renovación a la vez: las demás peticiones
+  /// se suman a la que ya está en camino y reciben el mismo token.
+  private renovacionEnCurso: Observable<Token | null> | null = null;
+
   /// Pide un token nuevo usando la cookie. Lo llama el arranque de
   /// la aplicacion y el interceptor cuando recibe un 401.
   refrescar(): Observable<Token | null> {
-    return this.http.post<Token>(`${this.base}/refrescar`, {},
-      { withCredentials: true })
+    if (this.renovacionEnCurso) return this.renovacionEnCurso;
+
+    this.renovacionEnCurso = this.http
+      .post<Token>(`${this.base}/refrescar`, {}, { withCredentials: true })
       .pipe(
         tap(t => this.token.set(t)),
         catchError(() => {
           this.token.set(null);
           return of(null);
-        })
+        }),
+        // Al terminar se libera, para que la próxima vez que venza se
+        // pueda pedir una nueva.
+        finalize(() => { this.renovacionEnCurso = null; }),
+        // Todas las que se suman reciben el mismo resultado, sin
+        // repetir la petición.
+        shareReplay(1)
       );
+
+    return this.renovacionEnCurso;
   }
 
   /// Se ejecuta una vez al iniciar: si hay cookie valida, recupera

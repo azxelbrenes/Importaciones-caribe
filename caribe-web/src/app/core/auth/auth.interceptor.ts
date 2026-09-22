@@ -13,19 +13,27 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // Estas dos rutas no llevan token y no se reintentan: hacerlo
-  // seria un bucle infinito de refrescos fallidos.
+  // Estas rutas no llevan token y no se reintentan: hacerlo seria un
+  // bucle infinito de renovaciones fallidas.
   const esDeAuth = req.url.includes('/auth/refrescar')
                 || req.url.includes('/auth/login');
 
-  const token = auth.accessToken;
+  // El token con el que sale ESTA peticion. Se guarda para saber,
+  // si falla, si otra peticion ya consiguio uno nuevo mientras tanto.
+  const tokenUsado = auth.accessToken;
 
-  const conToken = token && !esDeAuth
+  const conToken = tokenUsado && !esDeAuth
     ? req.clone({
-        setHeaders: { Authorization: `Bearer ${token}` },
+        setHeaders: { Authorization: `Bearer ${tokenUsado}` },
         withCredentials: true
       })
     : req.clone({ withCredentials: true });
+
+  const reintentar = (token: string) =>
+    next(req.clone({
+      setHeaders: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    }));
 
   return next(conToken).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -33,6 +41,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      // Si mientras esta peticion viajaba otra ya renovo el token, se
+      // reintenta con ese directamente. Pedir otra renovacion rotaria
+      // la cookie de nuevo sin ninguna necesidad.
+      const actual = auth.accessToken;
+      if (actual && actual !== tokenUsado) {
+        return reintentar(actual);
+      }
+
+      // Si no, se renueva. Si ya hay una renovacion en camino, refrescar()
+      // devuelve esa misma: nunca salen dos a la vez.
       return auth.refrescar().pipe(
         switchMap(nuevo => {
           if (!nuevo) {
@@ -41,13 +59,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
           }
 
-          // Se repite la peticion original con el token nuevo.
-          const reintento = req.clone({
-            setHeaders: { Authorization: `Bearer ${nuevo.accessToken}` },
-            withCredentials: true
-          });
-
-          return next(reintento);
+          return reintentar(nuevo.accessToken);
         })
       );
     })
