@@ -40,7 +40,7 @@ export class LoginComponent {
     if (m === 'inactividad')
       this.motivo.set('Su sesión se cerró por inactividad.');
 
-    if (m === 'password')
+    if (m === 'password' || m === 'restablecida')
       this.motivo.set('Contraseña cambiada. Entrá con la nueva.');
   }
 
@@ -65,11 +65,17 @@ export class LoginComponent {
         this.enviando.set(false);
 
         if (r.requiereDobleFactor) {
+          // La contraseña NO se borra acá: el backend la vuelve a
+          // pedir junto con el código, porque el login no guarda
+          // estado entre los dos pasos. Borrarla hacía que el segundo
+          // envío llegara vacío y fuera rechazado.
           this.paso.set(2);
-          // La contraseña ya no se necesita en memoria.
-          this.password.set('');
           return;
         }
+
+        // Recién ahora deja de hacer falta en memoria.
+        this.password.set('');
+        this.codigo.set('');
 
         // Vuelve a donde intentaba entrar, o al panel.
         const volver = this.ruta.snapshot.queryParamMap.get('volver');
@@ -77,13 +83,7 @@ export class LoginComponent {
       },
       error: (e) => {
         this.enviando.set(false);
-
-        this.error.set(
-          e?.error?.mensaje ??
-          (e?.status === 429
-            ? 'Demasiados intentos. Espere un minuto e intente de nuevo.'
-            : 'No pudimos verificar sus credenciales.')
-        );
+        this.error.set(this.mensajeDeError(e));
       }
     });
   }
@@ -93,6 +93,35 @@ export class LoginComponent {
     this.codigo.set('');
     this.password.set('');
     this.error.set(null);
+  }
+
+  /// Traduce la respuesta del servidor a un mensaje útil.
+  ///
+  /// Antes todo lo que no traía "mensaje" terminaba en "No pudimos
+  /// verificar sus credenciales", y eso escondió el error del doble
+  /// factor: la validación respondía, pero con otro formato.
+  private mensajeDeError(e: { status?: number; error?: any }): string {
+    if (e?.error?.mensaje) return e.error.mensaje;
+
+    // FluentValidation devuelve un arreglo de errores por campo.
+    if (e?.error?.errors) {
+      return Object.values(e.error.errors as Record<string, string[]>)
+        .flat()
+        .join(' · ');
+    }
+
+    switch (e?.status) {
+      case 0:
+        return 'No hay conexión con el servidor. Revisá tu internet.';
+      case 429:
+        return 'Demasiados intentos. Esperá un minuto e intentá de nuevo.';
+      case 502:
+      case 503:
+      case 504:
+        return 'El servidor se está actualizando. Probá de nuevo en un minuto.';
+      default:
+        return 'No pudimos verificar sus credenciales.';
+    }
   }
 
   /// Deja solo dígitos y corta en 6: la aplicación siempre da seis.

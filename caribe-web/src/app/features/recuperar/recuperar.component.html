@@ -1,0 +1,56 @@
+<div class="pantalla">
+  <div class="caja">
+
+    <header class="marca">
+      <img src="logo.jpg" alt="" width="60" height="60">
+      <strong>Importaciones del Caribe</strong>
+      <small>Recuperar contraseña</small>
+    </header>
+
+    @if (enviado()) {
+
+      <!-- El mensaje es el mismo exista o no la cuenta. Decir "ese
+           correo no está registrado" le confirmaría a cualquiera quién
+           tiene acceso al panel. -->
+      <div class="resultado exito">
+        <p class="titulo">Revisá tu correo</p>
+        <p>
+          Si <strong>{{ email() }}</strong> tiene una cuenta, te enviamos
+          un enlace para crear una contraseña nueva.
+        </p>
+        <p class="secundario">
+          El enlace vence en 30 minutos. Si no aparece, revisá la carpeta
+          de spam.
+        </p>
+        <a routerLink="/admin/login">← Volver al acceso</a>
+      </div>
+
+    } @else {
+
+      <p class="intro">
+        Escribí el correo de tu cuenta y te mandamos un enlace para
+        crear una contraseña nueva.
+      </p>
+
+      <div class="campo">
+        <label for="r-email">Correo</label>
+        <input id="r-email" type="email" inputmode="email" autocomplete="username"
+               placeholder="correo@dominio.com"
+               [ngModel]="email()" (ngModelChange)="email.set($event)"
+               (keyup.enter)="enviar()">
+      </div>
+
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+
+      <button class="activar" type="button"
+              [disabled]="!valido() || enviando()"
+              (click)="enviar()">
+        @if (enviando()) { Enviando… } @else { Enviar enlace }
+      </button>
+
+      <p class="nota"><a routerLink="/admin/login">← Volver al acceso</a></p>
+    }
+  </div>
+</div>

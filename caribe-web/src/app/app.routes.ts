@@ -17,6 +17,16 @@ export const routes: Routes = [
     title: 'Acceso al panel · Importaciones del Caribe CR'
   },
 
+  // Sin guard: quien la abre olvidó la contraseña, así que no tiene
+  // sesión. Va ANTES de 'admin' para que el authGuard no la intercepte.
+  {
+    path: 'admin/recuperar',
+    loadComponent: () =>
+      import('./features/recuperar/recuperar.component')
+        .then(m => m.RecuperarComponent),
+    title: 'Recuperar contraseña · Importaciones del Caribe CR'
+  },
+
   {
     path: 'admin',
     // authGuard protege el panel completo, incluidas sus rutas hijas.
@@ -138,6 +148,17 @@ export const routes: Routes = [
       import('./features/aceptar-invitacion/aceptar-invitacion.component')
         .then(m => m.AceptarInvitacionComponent),
     title: 'Activar cuenta · Importaciones del Caribe CR'
+  },
+
+  // El correo de recuperación apunta acá: /restablecer?token=…
+  // La ruta la define el backend en UsuarioLN, no se puede cambiar
+  // sin cambiar también el enlace del correo.
+  {
+    path: 'restablecer',
+    loadComponent: () =>
+      import('./features/restablecer/restablecer.component')
+        .then(m => m.RestablecerComponent),
+    title: 'Nueva contraseña · Importaciones del Caribe CR'
   },
 
   // Provisional mientras se construye el sitio público.
