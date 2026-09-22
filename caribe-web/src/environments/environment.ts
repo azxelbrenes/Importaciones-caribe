@@ -10,8 +10,8 @@ export const environment = {
   // Cambiarlos acá los cambia en todo el sitio.
 
   /// Solo dígitos, con el 506 adelante. CAMBIAR por el número del cliente.
-  whatsapp: '50683323227',
+  whatsapp: '50660429559',
 
   /// Sin la arroba. CAMBIAR por el usuario real.
-  instagram: 'importacionescaribecr'
+   instagram: 'importcaribecr'
 };
