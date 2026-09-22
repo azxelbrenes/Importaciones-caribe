@@ -1,0 +1,197 @@
+<app-encabezado-seccion
+  titulo="Usuarios"
+  descripcion="Invitá administradores y operadores. Cada uno recibe un enlace para crear su propia contraseña." />
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+<!-- ══════════ INVITAR ══════════ -->
+<section class="panel invitar">
+  <h2>Invitar a alguien</h2>
+
+  <div class="formulario">
+    <div class="campo">
+      <label for="u-email">Correo</label>
+      <input id="u-email" type="email" inputmode="email"
+             placeholder="persona@gmail.com"
+             [ngModel]="email()" (ngModelChange)="email.set($event)"
+             (keyup.enter)="invitar()">
+    </div>
+
+    <div class="campo">
+      <label for="u-rol">Rol</label>
+      <select id="u-rol" [ngModel]="rol()" (ngModelChange)="rol.set($event)">
+        @for (r of roles; track r.valor) {
+          <option [ngValue]="r.valor">{{ r.texto }}</option>
+        }
+      </select>
+    </div>
+
+    <button class="btn-principal" type="button"
+            [disabled]="!emailValido() || invitando()"
+            (click)="invitar()">
+      @if (invitando()) { Invitando… } @else { Invitar }
+    </button>
+  </div>
+
+  <!-- "Operador" no dice nada por sí solo: con la descripción al lado,
+       la elección es informada en vez de una adivinanza. -->
+  <div class="roles">
+    @for (r of roles; track r.valor) {
+      <div class="rol" [class.elegido]="rol() === r.valor">
+        <strong>{{ r.texto }}</strong>
+        <span>{{ r.descripcion }}</span>
+      </div>
+    }
+  </div>
+
+  @if (reciente(); as r) {
+    <div class="enlace">
+      <p class="titulo">Invitación creada para {{ r.email }}</p>
+      <p class="explica">
+        El envío de correos todavía no está activo. Mandale este enlace
+        a la persona.
+      </p>
+
+      <code>{{ r.enlaceTemporal }}</code>
+
+      <div class="botones">
+        <button class="btn-principal" type="button"
+                (click)="copiar(r.enlaceTemporal, 'enlace')">
+          @if (copiado() === 'enlace') { Copiado ✓ } @else { Copiar enlace }
+        </button>
+        <a class="btn-borde wa" [href]="whatsappInvitacion()" target="_blank" rel="noopener">
+          Enviar por WhatsApp
+        </a>
+      </div>
+
+      <p class="vence-nota">Vence en 72 horas y solo sirve una vez.</p>
+    </div>
+  }
+</section>
+
+<!-- ══════════ PENDIENTES ══════════ -->
+@if (vigentes().length > 0) {
+  <section class="panel">
+    <h2>Invitaciones pendientes</h2>
+
+    <ul class="lista">
+      @for (i of vigentes(); track i.id) {
+        <li>
+          <div class="info">
+            <strong>{{ i.email }}</strong>
+            <small>{{ i.rolTexto }} · {{ vence(i.expiraEn) }}</small>
+          </div>
+          <button class="btn-peligro" type="button" (click)="aRevocar.set(i)">
+            Revocar
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<!-- ══════════ CUENTAS ══════════ -->
+<section class="panel">
+  <h2>Cuentas</h2>
+
+  @if (cargando()) {
+    <p class="cargando">Cargando…</p>
+  } @else {
+    <ul class="cuentas">
+      @for (u of usuarios(); track u.id) {
+        <li [class.inactivo]="!u.activo">
+          <div class="persona">
+            <strong>
+              {{ u.nombreCompleto }}
+              @if (esUnoMismo(u)) { <em>vos</em> }
+            </strong>
+            <small>{{ u.email }}</small>
+          </div>
+
+          <div class="meta">
+            <span class="pastilla rol">{{ rolDe(u) }}</span>
+            <span class="dos-pasos" [class.activo]="u.dobleFactorActivo">
+              {{ u.dobleFactorActivo ? '◆ 2 pasos' : '◇ Sin 2 pasos' }}
+            </span>
+            <small>Último acceso: {{ fecha(u.ultimoAcceso) }}</small>
+          </div>
+
+          <!-- Ni sobre uno mismo ni sobre otro propietario: quitarse el
+               acceso o quitárselo al dueño no tiene vuelta atrás desde
+               el panel. -->
+          @if (!esUnoMismo(u) && !esPropietario(u)) {
+            <div class="acciones">
+              <button class="btn-borde" type="button" (click)="aRestablecer.set(u)">
+                Nueva clave
+              </button>
+              <button type="button"
+                      [class]="u.activo ? 'btn-peligro' : 'btn-borde'"
+                      (click)="aDesactivar.set(u)">
+                @if (u.activo) { Desactivar } @else { Reactivar }
+              </button>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<!-- ══════════ CONFIRMACIONES ══════════ -->
+
+@if (aDesactivar(); as u) {
+  <app-confirmar
+    [titulo]="u.activo ? 'Desactivar cuenta' : 'Reactivar cuenta'"
+    [mensaje]="u.activo
+      ? u.nombreCompleto + ' no va a poder entrar al panel, y sus sesiones abiertas se cierran de inmediato.'
+      : u.nombreCompleto + ' va a poder entrar otra vez con su contraseña actual.'"
+    [textoAceptar]="u.activo ? 'Desactivar' : 'Reactivar'"
+    (confirmar)="confirmarDesactivar()"
+    (cancelar)="aDesactivar.set(null)" />
+}
+
+@if (aRestablecer(); as u) {
+  <app-confirmar
+    titulo="Nueva contraseña"
+    [mensaje]="'Se genera una contraseña temporal para ' + u.nombreCompleto +
+               '. La anterior deja de servir y sus sesiones se cierran.'"
+    textoAceptar="Generar"
+    (confirmar)="confirmarRestablecer()"
+    (cancelar)="aRestablecer.set(null)" />
+}
+
+@if (aRevocar(); as i) {
+  <app-confirmar
+    titulo="Revocar invitación"
+    [mensaje]="'El enlace enviado a ' + i.email + ' deja de funcionar. Podés invitar a esa persona de nuevo después.'"
+    textoAceptar="Revocar"
+    (confirmar)="confirmarRevocar()"
+    (cancelar)="aRevocar.set(null)" />
+}
+
+@if (claveNueva(); as c) {
+  <div class="fondo" (click)="claveNueva.set(null)">
+    <div class="caja-clave" (click)="$event.stopPropagation()">
+      <p class="titulo">Contraseña temporal</p>
+      <p class="explica">
+        Pasásela a {{ c.email }} y pedile que la cambie desde
+        Mi cuenta apenas entre.
+      </p>
+
+      <code>{{ c.passwordTemporal }}</code>
+
+      <div class="botones">
+        <button class="btn-principal" type="button"
+                (click)="copiar(c.passwordTemporal, 'clave')">
+          @if (copiado() === 'clave') { Copiada ✓ } @else { Copiar }
+        </button>
+        <button class="btn-borde" type="button" (click)="claveNueva.set(null)">
+          Cerrar
+        </button>
+      </div>
+
+      <p class="aviso">No la vas a poder ver de nuevo. Si la perdés, generá otra.</p>
+    </div>
+  </div>
+}

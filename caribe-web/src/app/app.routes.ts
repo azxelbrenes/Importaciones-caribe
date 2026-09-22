@@ -128,6 +128,18 @@ export const routes: Routes = [
     ]
   },
 
+  // ══════════════════ PÚBLICAS DEL PANEL ══════════════════
+
+  // Sin guard: quien la abre todavía NO tiene cuenta. Exigir sesión
+  // haría imposible aceptar una invitación.
+  {
+    path: 'aceptar-invitacion',
+    loadComponent: () =>
+      import('./features/aceptar-invitacion/aceptar-invitacion.component')
+        .then(m => m.AceptarInvitacionComponent),
+    title: 'Activar cuenta · Importaciones del Caribe CR'
+  },
+
   // Provisional mientras se construye el sitio público.
   { path: '', redirectTo: 'admin/login', pathMatch: 'full' },
 

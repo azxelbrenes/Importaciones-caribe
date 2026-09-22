@@ -1,0 +1,163 @@
+<app-encabezado-seccion
+  titulo="Financiamiento"
+  descripcion="Prima, tasa y plazos del plan de pagos que ven los clientes en la ficha de cada vehículo." />
+
+@if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
+@if (error())   { <p class="nota error">{{ error() }}</p> }
+
+@if (!puedeEditar()) {
+  <p class="nota alerta">
+    Solo el propietario puede cambiar esta configuración. La estás viendo
+    en modo lectura.
+  </p>
+}
+
+@if (cargando()) {
+  <p class="cargando">Cargando…</p>
+} @else {
+
+  @if (guardado(); as g) {
+    <div class="estado" [class.encendido]="g.estaOperativo">
+      <span class="punto"></span>
+      <div>
+        <strong>
+          @if (g.estaOperativo) { Activo en el sitio } @else { Apagado }
+        </strong>
+        <small>
+          @if (g.estaOperativo) {
+            Los vehículos marcados como financiables muestran sus cuotas.
+          } @else {
+            El sitio no muestra cuotas en ningún vehículo.
+          }
+          · Última modificación: {{ fecha(g.actualizadoEn) }}
+        </small>
+      </div>
+    </div>
+  }
+
+  <div class="disposicion">
+
+    <!-- ══════════ CONFIGURACIÓN ══════════ -->
+    <fieldset class="panel" [disabled]="!puedeEditar()">
+      <h2>Condiciones</h2>
+
+      <div class="campos">
+        <div class="campo">
+          <label for="fi-prima">Prima (%)</label>
+          <input id="fi-prima" type="number" min="0" max="100" step="5"
+                 [ngModel]="prima()" (ngModelChange)="prima.set($event)">
+          <small>Lo que el cliente paga por adelantado.</small>
+        </div>
+
+        <div class="campo">
+          <label for="fi-tasa">Tasa anual (%)</label>
+          <input id="fi-tasa" type="number" min="0" max="60" step="0.25"
+                 [ngModel]="tasa()" (ngModelChange)="tasa.set($event)">
+          <small>
+            No puede superar el tope que publica el Banco Central cada
+            semestre. Cobrar por encima es usura.
+          </small>
+        </div>
+
+        <div class="campo">
+          <label for="fi-min">Plazo mínimo (meses)</label>
+          <input id="fi-min" type="number" min="1" max="120"
+                 [ngModel]="plazoMin()" (ngModelChange)="plazoMin.set($event)">
+        </div>
+
+        <div class="campo">
+          <label for="fi-max">Plazo máximo (meses)</label>
+          <input id="fi-max" type="number" min="1" max="120"
+                 [ngModel]="plazoMax()" (ngModelChange)="plazoMax.set($event)">
+        </div>
+
+        <div class="campo ancho">
+          <label for="fi-plazos">Plazos que se ofrecen</label>
+          <input id="fi-plazos" type="text" placeholder="12,24,36"
+                 [ngModel]="plazos()" (ngModelChange)="plazos.set($event)">
+          @if (errorPlazos(); as e) {
+            <small class="mal">{{ e }}</small>
+          } @else {
+            <small>Separados por coma. Cada uno aparece como opción en la ficha.</small>
+          }
+        </div>
+
+        <div class="campo ancho">
+          <label for="fi-legal">Texto legal</label>
+          <textarea id="fi-legal" rows="4" maxlength="2000"
+                    placeholder="Lo redacta el abogado. Aparece debajo de las cuotas."
+                    [ngModel]="textoLegal()"
+                    (ngModelChange)="textoLegal.set($event)"></textarea>
+          <small>
+            La Ley 7472 obliga a informar el costo total del crédito.
+            Sin este texto, el sistema no deja activar el financiamiento.
+          </small>
+        </div>
+
+        <div class="campo ancho">
+          <label class="casilla">
+            <input type="checkbox" [ngModel]="activo()" (ngModelChange)="activo.set($event)">
+            <span>
+              <strong>Mostrar cuotas en el sitio</strong>
+              Solo en los vehículos marcados como "Acepta financiamiento".
+            </span>
+          </label>
+        </div>
+      </div>
+
+      @if (bloqueos().length > 0) {
+        <p class="nota alerta bloqueo">
+          No se puede activar: {{ bloqueos().join(' y ') }}.
+        </p>
+      }
+
+      @if (puedeEditar()) {
+        <button class="btn-principal guardar" type="button"
+                [disabled]="!valido() || guardando()"
+                (click)="guardar()">
+          @if (guardando()) { Guardando… } @else { Guardar }
+        </button>
+      }
+    </fieldset>
+
+    <!-- ══════════ VISTA PREVIA ══════════ -->
+    <aside class="panel vista">
+      <h2>Vista previa</h2>
+      <p class="ayuda">Cómo quedan las cuotas con estos valores, antes de guardar.</p>
+
+      <div class="campo">
+        <label for="fi-ejemplo">Precio de ejemplo</label>
+        <input id="fi-ejemplo" type="number" min="1000" step="1000"
+               [ngModel]="precioEjemplo()" (ngModelChange)="precioEjemplo.set($event)">
+      </div>
+
+      @if (vistaPrevia().length === 0) {
+        <p class="sin-datos">Indicá una tasa mayor a cero para ver las cuotas.</p>
+      } @else {
+        <p class="prima-ejemplo">
+          Prima: <strong>{{ primaEjemplo() | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </p>
+
+        <table class="cuotas">
+          <thead>
+            <tr><th>Plazo</th><th class="num">Cuota</th><th class="num">Total</th></tr>
+          </thead>
+          <tbody>
+            @for (c of vistaPrevia(); track c.plazo) {
+              <tr>
+                <td>{{ c.plazo }} meses</td>
+                <td class="num">{{ c.cuota | currency:'USD':'symbol':'1.0-0' }}</td>
+                <td class="num tenue">{{ c.total | currency:'USD':'symbol':'1.0-0' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <p class="nota-total">
+          El total incluye la prima: es lo que el cliente termina pagando
+          por el vehículo, y la ley obliga a mostrarlo.
+        </p>
+      }
+    </aside>
+  </div>
+}
