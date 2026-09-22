@@ -13,22 +13,14 @@ export interface VehiculoDetalle {
   descripcion: string | null;
   precioPublicado: number;
   estado: number;
-  desglose: DesglosePrecio;
+
+  /// Días que vale la cotización. Los montos por línea no llegan: el
+  /// backend no los manda.
+  vigenciaDias: number;
   fotos: Foto[];
 
   /// Null si el vehículo no se financia o el financiamiento está apagado.
   financiamiento: FinanciamientoVehiculo | null;
-}
-
-/// El honorario NO viene por separado: llega sumado dentro de
-/// "trámites". La ganancia del negocio no sale al sitio.
-export interface DesglosePrecio {
-  vehiculo: number;
-  flete: number;
-  impuestos: number;
-  tramites: number;
-  total: number;
-  vigenciaDias: number;
 }
 
 export interface Foto {

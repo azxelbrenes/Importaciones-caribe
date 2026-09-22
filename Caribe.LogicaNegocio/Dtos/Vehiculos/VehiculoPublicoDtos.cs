@@ -23,22 +23,6 @@ public record VehiculoDto(
     string? FotoPortada
 );
 
-/// <summary>
-/// Desglose que ve el visitante.
-///
-/// El honorario NO aparece como linea propia: va sumado dentro de
-/// "Tramites". Mostrarlo por separado le diria a la competencia
-/// exactamente cuanto gana el negocio por vehiculo.
-/// </summary>
-public record DesglosePrecioDto(
-    decimal Vehiculo,
-    decimal Flete,
-    decimal Impuestos,
-    decimal Tramites,
-    decimal Total,
-    short VigenciaDias
-);
-
 public record FotoDto(
     string Url,
     string UrlThumb,
@@ -80,7 +64,15 @@ public record VehiculoDetalleDto(
     string? Descripcion,
     decimal PrecioPublicado,
     short Estado,
-    DesglosePrecioDto Desglose,
+
+    /// <summary>
+    /// Dias que vale la cotizacion. Es lo unico que queda del calculo:
+    /// los montos por linea —cuanto costo en EE. UU., cuanto se pago de
+    /// impuestos— no salen del servidor. Ocultarlos en la pagina no
+    /// alcanzaria: seguirian viajando en la respuesta del API, y
+    /// cualquiera podria leerlos desde el navegador.
+    /// </summary>
+    short VigenciaDias,
     IReadOnlyList<FotoDto> Fotos,
 
     /// <summary>Null si el vehiculo no se financia o esta apagado.</summary>

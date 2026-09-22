@@ -121,15 +121,7 @@ public class VehiculoLN : IVehiculoLN
             v.Descripcion,
             v.PrecioPublicado,
             (short)v.Estado,
-            // El honorario va sumado dentro de Tramites: mostrarlo
-            // aparte le diria a la competencia cuanto gana el negocio.
-            new DesglosePrecioDto(
-                v.CostoVehiculo,
-                v.CostoFlete,
-                v.CostoImpuestos,
-                v.CostoTramites + v.Honorario,
-                v.PrecioPublicado,
-                v.VigenciaDias),
+            v.VigenciaDias,
             v.Fotos
                 .OrderByDescending(f => f.EsPortada)
                 .ThenBy(f => f.Orden)

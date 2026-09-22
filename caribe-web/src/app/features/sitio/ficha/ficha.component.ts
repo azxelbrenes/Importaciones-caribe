@@ -38,21 +38,6 @@ export class FichaComponent {
 
   fotoActual = computed(() => this.v()?.fotos[this.indiceFoto()] ?? null);
 
-  /// El desglose sin el total: la fila del total va aparte, destacada.
-  lineas = computed(() => {
-    const d = this.v()?.desglose;
-    if (!d) return [];
-
-    return [
-      { etiqueta: 'Vehículo en Estados Unidos', valor: d.vehiculo },
-      { etiqueta: 'Traslado hasta Costa Rica', valor: d.flete },
-      { etiqueta: 'Impuestos y nacionalización', valor: d.impuestos },
-      // El honorario llega sumado acá dentro: el backend no lo manda
-      // por separado, y así la ganancia del negocio no sale al sitio.
-      { etiqueta: 'Trámites, RTV y placas', valor: d.tramites }
-    ].filter(l => l.valor > 0);
-  });
-
   constructor() {
     inject(ActivatedRoute).paramMap.pipe(
       switchMap(p => {

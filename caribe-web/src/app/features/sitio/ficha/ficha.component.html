@@ -107,24 +107,20 @@
           adicionales al entregar.
         </p>
 
-        <ul class="desglose">
-          @for (l of lineas(); track l.etiqueta) {
-            <li>
-              <span>{{ l.etiqueta }}</span>
-              <strong>{{ l.valor | currency:'USD':'symbol':'1.0-0' }}</strong>
-            </li>
-          }
-          <li class="total">
-            <span>Total puesto en Costa Rica</span>
-            <strong>{{ v.desglose.total | currency:'USD':'symbol':'1.0-0' }}</strong>
-          </li>
+        <!-- La lista va sin montos a propósito: cuánto costó el vehículo
+             en Estados Unidos y cuánto se pagó de impuestos es la
+             estructura de costos del negocio. -->
+        <ul class="incluye">
+          <li>El vehículo, comprado y verificado en Estados Unidos</li>
+          <li>El traslado hasta Costa Rica</li>
+          <li>Impuestos y nacionalización</li>
+          <li>Trámites, RTV y placas</li>
+          <li>Acompañamiento hasta que el carro queda a tu nombre</li>
         </ul>
 
-        <!-- El aviso no es relleno: el avalúo de Hacienda y el tipo de
-             cambio se mueven, y un precio publicado es una oferta. -->
         <p class="vigencia">
-          Cotización válida por {{ v.desglose.vigenciaDias }} días. Después
-          puede variar con el tipo de cambio y el avalúo de Hacienda.
+          Cotización válida por {{ v.vigenciaDias }} días. Después puede
+          variar con el tipo de cambio y el avalúo de Hacienda.
         </p>
       </section>
 

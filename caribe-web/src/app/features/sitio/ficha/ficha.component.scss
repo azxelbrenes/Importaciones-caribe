@@ -212,31 +212,33 @@
   .ayuda { font-size: 13.5px; color: var(--muted); margin-top: 8px; }
 }
 
-.desglose {
+.incluye {
   list-style: none;
   padding: 0;
   margin: 20px 0 0;
 
   li {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 11px 0;
+    position: relative;
+    padding: 10px 0 10px 26px;
+    font-size: 14.5px;
+    color: #B9C6D3;
     border-bottom: 1px solid var(--line);
-    font-size: 14px;
 
-    span { color: var(--muted); }
-    strong { font-family: var(--mono); font-weight: 500; white-space: nowrap; }
-  }
+    &:last-child { border-bottom: none; }
 
-  .total {
-    border-bottom: none;
-    border-top: 2px solid var(--line2);
-    margin-top: 6px;
-    padding-top: 15px;
-
-    span { color: var(--txt); font-weight: 600; }
-    strong { font-family: var(--disp); font-size: 22px; font-weight: 800; }
+    // Una marca de verificación dibujada con dos trazos: dice
+    // "incluido" sin necesidad de una imagen.
+    &::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 17px;
+      width: 10px;
+      height: 5px;
+      border-left: 2px solid var(--ok);
+      border-bottom: 2px solid var(--ok);
+      transform: rotate(-45deg);
+    }
   }
 }
 
