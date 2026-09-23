@@ -25,6 +25,14 @@ public interface IVehiculoLN
     /// </summary>
     Task<Respuesta<VehiculoDto?>> DestacadoAsync(CancellationToken ct = default);
 
+    /// <summary>
+    /// Slugs de los vehiculos visibles, con su ultima modificacion.
+    /// Alimenta el sitemap: sin el, Google tendria que descubrir cada
+    /// ficha navegando, y las nuevas tardarian semanas en aparecer.
+    /// </summary>
+    Task<Respuesta<IEnumerable<(string Slug, DateTimeOffset Actualizado)>>>
+        SlugsPublicadosAsync(CancellationToken ct = default);
+
     // ── Panel ──
 
     Task<Respuesta<Pagina<VehiculoAdminDto>>> ListarAdminAsync(

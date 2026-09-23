@@ -163,6 +163,21 @@ public class VehiculoLN : IVehiculoLN
         return Respuesta<VehiculoDto?>.Ok(v);
     }
 
+    public async Task<Respuesta<IEnumerable<(string Slug, DateTimeOffset Actualizado)>>>
+        SlugsPublicadosAsync(CancellationToken ct = default)
+    {
+        var lista = await _db.Vehiculos
+            .AsNoTracking()
+            .Where(v => v.Estado == EstadoVehiculo.Disponible
+                     || v.Estado == EstadoVehiculo.EnTrato)
+            .OrderByDescending(v => v.ActualizadoEn)
+            .Select(v => new { v.Slug, v.ActualizadoEn })
+            .ToListAsync(ct);
+
+        return Respuesta<IEnumerable<(string, DateTimeOffset)>>.Ok(
+            lista.Select(v => (v.Slug, v.ActualizadoEn)).ToList());
+    }
+
     // ══════════════════ PANEL ══════════════════
 
     public async Task<Respuesta<Pagina<VehiculoAdminDto>>> ListarAdminAsync(
