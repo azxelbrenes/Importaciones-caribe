@@ -195,6 +195,19 @@ export const routes: Routes = [
             .then(m => m.FichaComponent)
       },
 
+      {
+        path: 'privacidad',
+        loadComponent: () =>
+          import('./features/sitio/legal/privacidad.component')
+            .then(m => m.PrivacidadComponent)
+      },
+      {
+        path: 'terminos',
+        loadComponent: () =>
+          import('./features/sitio/legal/terminos.component')
+            .then(m => m.TerminosComponent)
+      },
+
       // El comodín dentro del layout: la página 404 lleva encabezado y
       // pie, así quien llega a un enlace roto puede seguir navegando.
       {

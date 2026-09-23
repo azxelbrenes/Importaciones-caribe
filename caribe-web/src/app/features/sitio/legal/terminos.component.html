@@ -1,0 +1,72 @@
+<article class="legal">
+  <div class="envoltura">
+    <nav class="miga"><a routerLink="/">Inicio</a> <span>/</span> <em>Términos</em></nav>
+
+    <h1>Términos de uso</h1>
+    <p class="fecha">Última actualización: {{ actualizado }}</p>
+
+    <p class="intro">
+      Este sitio pertenece a Importaciones del Caribe CR. Al usarlo,
+      aceptás las condiciones que se describen acá.
+    </p>
+
+    <h2>Sobre los precios</h2>
+    <p>
+      Los precios publicados son <strong>cotizaciones de referencia</strong>
+      con la vigencia que se indica en cada vehículo. No constituyen una
+      oferta en firme ni un contrato.
+    </p>
+    <p>Pueden variar por:</p>
+    <ul>
+      <li>Cambios en el tipo de cambio del dólar</li>
+      <li>Cambios en el avalúo de Hacienda o en los impuestos de importación</li>
+      <li>Variaciones en el costo del traslado</li>
+    </ul>
+    <p>
+      El precio definitivo se confirma por escrito antes de iniciar
+      cualquier gestión.
+    </p>
+
+    <h2>Sobre la disponibilidad</h2>
+    <p>
+      Un vehículo publicado puede venderse o dejar de estar disponible en
+      cualquier momento. Que aparezca en el catálogo no garantiza que siga
+      disponible al momento de tu consulta.
+    </p>
+
+    <h2>Sobre la información de los vehículos</h2>
+    <p>
+      Los datos y las fotografías corresponden al vehículo ofrecido y se
+      publican de buena fe. Si notás una diferencia entre lo publicado y
+      el vehículo real, avisanos y lo corregimos.
+    </p>
+
+    <h2>Sobre el financiamiento</h2>
+    <p>
+      Cuando un vehículo indica que acepta financiamiento, eso significa
+      que existe la posibilidad de acordar un plan de pagos.
+      <strong>Las condiciones —incluida la tasa— se acuerdan de forma
+      individual</strong> y no se publican en este sitio. Todo plan queda
+      sujeto a las condiciones que se pacten por escrito entre las partes.
+    </p>
+
+    <h2>Sobre las consultas</h2>
+    <p>
+      Enviar una consulta no genera obligación de compra ni de venta. Es
+      el inicio de una conversación.
+    </p>
+
+    <h2>Tus datos</h2>
+    <p>
+      El tratamiento de tus datos personales se rige por nuestra
+      <a routerLink="/privacidad">política de privacidad</a>.
+    </p>
+
+    <h2>Contacto</h2>
+    <p>
+      Para cualquier consulta sobre estos términos, escribinos por WhatsApp
+      al <a [href]="contacto.whatsappUrl()" target="_blank" rel="noopener">
+        {{ contacto.whatsappVisible }}</a>.
+    </p>
+  </div>
+</article>

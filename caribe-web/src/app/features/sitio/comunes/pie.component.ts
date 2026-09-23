@@ -52,7 +52,11 @@ import { IconoComponent } from './icono.component';
           </p>
           <p class="fila">
             <span>© {{ anio }} Importaciones del Caribe CR</span>
-            <a routerLink="/admin/login" class="acceso">Acceso</a>
+            <span class="enlaces-legales">
+              <a routerLink="/privacidad">Privacidad</a>
+              <a routerLink="/terminos">Términos</a>
+              <a routerLink="/admin/login" class="acceso">Acceso</a>
+            </span>
           </p>
         </div>
       </div>
@@ -114,8 +118,9 @@ import { IconoComponent } from './icono.component';
       margin-top: 12px;
     }
 
-    .acceso { color: var(--dim); font-family: var(--mono); font-size: 11px; }
-    .acceso:hover { color: var(--blue); }
+    .enlaces-legales { display: flex; gap: 18px; flex-wrap: wrap; }
+    .enlaces-legales a { color: var(--dim); font-family: var(--mono); font-size: 11px; }
+    .enlaces-legales a:hover { color: var(--blue); }
   `]
 })
 export class PieComponent {

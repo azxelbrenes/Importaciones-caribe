@@ -1,4 +1,6 @@
-import { Component, HostListener, PLATFORM_ID, inject, signal } from '@angular/core';
+import {
+  Component, HostListener, PLATFORM_ID, afterNextRender, inject, signal
+} from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { filter } from 'rxjs';
@@ -10,7 +12,7 @@ import { IconoComponent } from './icono.component';
   standalone: true,
   imports: [RouterLink, RouterLinkActive, IconoComponent],
   template: `
-    <header class="barra" [class.solida]="desplazado() || abierto()">
+    <header class="barra" [class.solida]="conFondo()">
       <div class="envoltura">
         <a class="marca" routerLink="/" (click)="cerrar()">
           <img src="logo.jpg" alt="" width="42" height="42">
@@ -41,7 +43,7 @@ import { IconoComponent } from './icono.component';
         <button class="menu" type="button"
                 [attr.aria-expanded]="abierto()"
                 [attr.aria-label]="abierto() ? 'Cerrar menú' : 'Abrir menú'"
-                (click)="abierto.update(v => !v)">
+                (click)="alternar()">
           <app-icono [nombre]="abierto() ? 'cerrar' : 'menu'" [tam]="24" />
         </button>
       </div>
@@ -56,22 +58,64 @@ export class EncabezadoComponent {
   abierto = signal(false);
   desplazado = signal(false);
 
+  /// Solo el inicio tiene una imagen grande detrás de la barra. En las
+  /// demás páginas, dejarla transparente la hace ver suspendida sobre
+  /// el contenido.
+  esInicio = signal(true);
+
+  conFondo = signal(true);
+
   private esNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
-    // Al navegar se cierra el menú del celular. Sin esto, quedaría
-    // abierto tapando la página a la que la persona acaba de ir.
-    inject(Router).events
+    const router = inject(Router);
+
+    this.actualizarRuta(router.url);
+
+    router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe(() => this.abierto.set(false));
+      .subscribe((e) => {
+        this.abierto.set(false);
+        this.actualizarRuta((e as NavigationEnd).urlAfterRedirects);
+
+        // Al cambiar de página el navegador vuelve arriba, pero el
+        // evento de desplazamiento no se dispara. Sin esto, la barra
+        // quedaría con el estado de la página anterior.
+        this.leerPosicion();
+      });
+
+    // Al entrar, o al volver a una pestaña que el navegador restauró
+    // desplazada, tampoco hay evento. Se lee la posición una vez.
+    afterNextRender(() => this.leerPosicion());
   }
 
-  /// La barra se vuelve sólida al bajar: arriba deja ver la foto del
-  /// inicio, abajo necesita fondo para que se lea sobre el contenido.
-  @HostListener('window:scroll')
-  alDesplazar(): void {
+  private actualizarRuta(url: string): void {
+    const limpia = url.split(/[?#]/)[0];
+    this.esInicio.set(limpia === '/' || limpia === '');
+    this.recalcular();
+  }
+
+  private leerPosicion(): void {
     if (this.esNavegador) this.desplazado.set(window.scrollY > 24);
+    this.recalcular();
   }
 
-  cerrar(): void { this.abierto.set(false); }
+  /// La barra lleva fondo salvo en un caso: el inicio, sin desplazar y
+  /// con el menú cerrado.
+  private recalcular(): void {
+    this.conFondo.set(!this.esInicio() || this.desplazado() || this.abierto());
+  }
+
+  @HostListener('window:scroll')
+  alDesplazar(): void { this.leerPosicion(); }
+
+  alternar(): void {
+    this.abierto.update(v => !v);
+    this.recalcular();
+  }
+
+  cerrar(): void {
+    this.abierto.set(false);
+    this.recalcular();
+  }
 }
