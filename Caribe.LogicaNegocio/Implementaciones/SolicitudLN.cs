@@ -1,18 +1,29 @@
 using Caribe.AccesoDatos.Contexto;
 using Caribe.Dominio.Entidades;
 using Caribe.Dominio.Enums;
+using Caribe.LogicaNegocio.Correo;
 using Caribe.LogicaNegocio.Dtos.Solicitudes;
 using Caribe.LogicaNegocio.Interfaces;
 using Caribe.Utilitarios;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Caribe.LogicaNegocio.Implementaciones;
 
 public class SolicitudLN : ISolicitudLN
 {
     private readonly CaribeContext _db;
+    private readonly ICorreoService _correo;
+    private readonly CorreoOpciones _correoOp;
+    private readonly ILogger<SolicitudLN> _logger;
 
-    public SolicitudLN(CaribeContext db) => _db = db;
+    public SolicitudLN(
+        CaribeContext db,
+        ICorreoService correo,
+        IOptions<CorreoOpciones> correoOp,
+        ILogger<SolicitudLN> logger)
+        => (_db, _correo, _correoOp, _logger) = (db, correo, correoOp.Value, logger);
 
     // ══════════════════ PUBLICO ══════════════════
 
@@ -100,9 +111,73 @@ public class SolicitudLN : ISolicitudLN
         _db.Solicitudes.Add(s);
         await _db.SaveChangesAsync(ct);
 
+        // El aviso va DESPUES de guardar, y su resultado no cambia el
+        // de la solicitud: si el correo falla, el cliente igual quedo
+        // registrado y aparece en el panel.
+        await AvisarAsync(s, ct);
+
         // No se audita: la auditoria registra acciones del personal.
         // Una solicitud publica ya queda registrada por si misma.
         return Respuesta<int>.Ok(s.Id);
+    }
+
+    /// <summary>
+    /// Avisa por correo que entro una solicitud.
+    ///
+    /// En este negocio, responder en la primera hora es lo que mas
+    /// decide la venta. Sin este aviso, el dueno solo se entera
+    /// entrando al panel: puede pasar medio dia sin saber que alguien
+    /// pregunto.
+    /// </summary>
+    private async Task AvisarAsync(Solicitud s, CancellationToken ct)
+    {
+        // Sin direccion configurada no hay a quien avisar. No es un
+        // error: es como arranca el sistema hasta que se configura.
+        if (string.IsNullOrWhiteSpace(_correoOp.CorreoAvisos)) return;
+
+        try
+        {
+            var vehiculo = await DescribirVehiculoAsync(s, ct);
+
+            var enlace = $"{_correoOp.UrlSitio.TrimEnd('/')}/admin/solicitudes";
+
+            await _correo.EnviarAsync(
+                _correoOp.CorreoAvisos,
+                $"Nueva solicitud: {vehiculo}",
+                Plantillas.SolicitudNueva(s.Nombre, s.Whatsapp, vehiculo, enlace),
+                ct);
+        }
+        catch (Exception ex)
+        {
+            // Nunca tumba la solicitud. Un fallo de correo no puede
+            // hacer que el cliente vea un error despues de haber
+            // enviado bien su consulta.
+            _logger.LogWarning(ex,
+                "No se pudo enviar el aviso de la solicitud {Id}", s.Id);
+        }
+    }
+
+    /// <summary>
+    /// "Toyota Tacoma 2023" si la solicitud viene de una ficha, o lo
+    /// que la persona escribio si no.
+    /// </summary>
+    private async Task<string> DescribirVehiculoAsync(Solicitud s, CancellationToken ct)
+    {
+        if (s.VehiculoId.HasValue)
+        {
+            var v = await _db.Vehiculos
+                .AsNoTracking()
+                .Where(x => x.Id == s.VehiculoId)
+                .Select(x => new { Marca = x.Marca.Nombre, Modelo = x.Modelo.Nombre, x.Anio })
+                .FirstOrDefaultAsync(ct);
+
+            if (v is not null) return $"{v.Marca} {v.Modelo} {v.Anio}";
+        }
+
+        var texto = string.Join(' ',
+            new[] { s.MarcaTexto, s.ModeloTexto }.Where(t => !string.IsNullOrWhiteSpace(t)));
+
+        return string.IsNullOrWhiteSpace(texto) ? "consulta general" : texto;
     }
 
     // ══════════════════ PANEL ══════════════════
