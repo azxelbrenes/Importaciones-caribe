@@ -56,8 +56,14 @@ jobs:
             ${{ env.REGISTRO }}/${{ steps.nombre.outputs.imagen }}-${{ matrix.incluir.nombre }}:${{ github.sha }}
           # Cache separado por imagen: si compartieran clave, cada
           # una invalidaría la de la otra.
-          cache-from: type=gha,scope=${{ matrix.incluir.nombre }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.incluir.nombre }}
+          #
+          # El sufijo -v2 es la version del cache. Si alguna vez el
+          # build falla en GitHub pero compila bien en local (por
+          # ejemplo, exit code 127 en npm run build), es un cache
+          # dañado: se sube a -v3 y el siguiente build arranca limpio.
+          # GitHub borra solo las entradas viejas que ya nadie usa.
+          cache-from: type=gha,scope=${{ matrix.incluir.nombre }}-v2
+          cache-to: type=gha,mode=max,scope=${{ matrix.incluir.nombre }}-v2
 
   desplegar:
     name: Desplegar al servidor
