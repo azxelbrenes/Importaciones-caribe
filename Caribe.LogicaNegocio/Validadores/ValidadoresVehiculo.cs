@@ -55,8 +55,11 @@ public class CrearVehiculoValidator : AbstractValidator<CrearVehiculoDto>
             .When(x => x.SemanasImportacionMax.HasValue)
             .WithMessage("Indique el tiempo mínimo de importación si pone un máximo.");
 
+        // Must en vez de GreaterThanOrEqualTo(x => ...): comparar dos
+        // short? con la sobrecarga de expresion no compila en todas
+        // las versiones de FluentValidation. Con Must es explicito.
         RuleFor(x => x.SemanasImportacionMax)
-            .GreaterThanOrEqualTo(x => x.SemanasImportacionMin)
+            .Must((dto, max) => max!.Value >= dto.SemanasImportacionMin!.Value)
             .When(x => x.SemanasImportacionMin.HasValue && x.SemanasImportacionMax.HasValue)
             .WithMessage("El tiempo máximo de importación no puede ser menor al mínimo.");
 

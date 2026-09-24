@@ -52,6 +52,8 @@ public record VehiculoDetalleAdminDto(
     decimal Honorario,
     decimal PrecioPublicado,
     short VigenciaDias,
+    short? SemanasImportacionMin,
+    short? SemanasImportacionMax,
     short Estado,
     bool Destacado,
     bool AceptaFinanciamiento
@@ -79,6 +81,11 @@ public class CrearVehiculoDto
     public decimal Honorario { get; set; }
 
     public short VigenciaDias { get; set; } = 7;
+
+    /// <summary>Opcionales: vacios, la ficha no muestra el tiempo.</summary>
+    public short? SemanasImportacionMin { get; set; }
+    public short? SemanasImportacionMax { get; set; }
+
     public bool Destacado { get; set; }
     public bool AceptaFinanciamiento { get; set; }
 

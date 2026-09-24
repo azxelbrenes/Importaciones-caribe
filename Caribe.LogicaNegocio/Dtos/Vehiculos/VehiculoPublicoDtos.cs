@@ -73,6 +73,13 @@ public record VehiculoDetalleDto(
     /// cualquiera podria leerlos desde el navegador.
     /// </summary>
     short VigenciaDias,
+
+    /// <summary>
+    /// Rango estimado de la importacion, en semanas. Null si el
+    /// negocio no lo indico para este vehiculo.
+    /// </summary>
+    short? SemanasImportacionMin,
+    short? SemanasImportacionMax,
     IReadOnlyList<FotoDto> Fotos,
 
     /// <summary>Null si el vehiculo no se financia o esta apagado.</summary>
