@@ -19,7 +19,7 @@
            (dragleave)="alSalir($event)"
            (drop)="alSoltar($event)">
 
-      <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden
+      <input type="file" accept="image/*" multiple hidden
              [disabled]="subiendo()"
              (change)="alSeleccionar($event)">
 
@@ -31,7 +31,7 @@
         <span class="icono">＋</span>
         <span class="titulo">Arrastrá fotos o tocá para elegir</span>
         <span class="ayuda">
-          JPG, PNG o WebP · hasta 10 MB cada una · quedan {{ restantes() }}
+          JPG, PNG, WebP o HEIC · hasta 10 MB cada una · quedan {{ restantes() }}
         </span>
       }
     </label>

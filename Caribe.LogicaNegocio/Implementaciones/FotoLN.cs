@@ -47,7 +47,7 @@ public class FotoLN : IFotoLN
         // nombre lo controla el cliente.
         if (!ProcesadorImagen.EsImagenValida(contenido))
             return Respuesta<FotoSubidaDto>.Invalido(
-                "El archivo no es una imagen válida. Use JPG, PNG o WebP.");
+                "El archivo no es una imagen válida. Use JPG, PNG, WebP o HEIC.");
 
         var cantidad = await _db.VehiculoFotos
             .CountAsync(f => f.VehiculoId == vehiculoId, ct);
@@ -64,12 +64,22 @@ public class FotoLN : IFotoLN
         }
         catch (Exception ex)
         {
-            // Firma valida pero contenido corrupto: es error del
-            // usuario, no del sistema, asi que no debe subir al
+            // Firma valida pero el procesamiento fallo: es error del
+            // archivo, no del sistema, asi que no debe subir al
             // middleware como 500.
             _logger.LogWarning(ex,
-                "Imagen corrupta al procesar {Archivo} del vehiculo {Id}",
+                "No se pudo procesar {Archivo} del vehiculo {Id}",
                 nombreOriginal, vehiculoId);
+
+            // Si es HEIC, el motivo mas probable es que el servidor no
+            // tenga el decodificador. Ahi el mensaje tiene que decirle
+            // a la persona QUE HACER, no solo que fallo: cambiar el
+            // ajuste del iPhone resuelve el problema para siempre.
+            if (ProcesadorImagen.EsHeic(contenido))
+                return Respuesta<FotoSubidaDto>.Invalido(
+                    "No pudimos convertir esta foto del iPhone. En el teléfono, entrá a " +
+                    "Ajustes → Cámara → Formatos y elegí \"Más compatible\": las fotos " +
+                    "nuevas se guardan en un formato que siempre funciona.");
 
             return Respuesta<FotoSubidaDto>.Invalido(
                 "No se pudo procesar la imagen. Puede estar dañada.");

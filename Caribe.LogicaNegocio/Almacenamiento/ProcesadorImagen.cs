@@ -37,9 +37,51 @@ public static class ProcesadorImagen
         [0x42, 0x4D]                           // BMP
     ];
 
+    /// <summary>
+    /// Tipos de archivo HEIC y HEIF, el formato con el que el iPhone
+    /// guarda las fotos desde iOS 11.
+    ///
+    /// No tienen una firma al inicio como los demas: llevan la caja
+    /// "ftyp" en el byte 4 y el tipo concreto en el 8.
+    /// </summary>
+    private static readonly string[] TiposHeic =
+        ["heic", "heix", "hevc", "hevx", "mif1", "msf1", "heim", "heis"];
+
+    /// <summary>
+    /// Si el archivo es HEIC o HEIF.
+    ///
+    /// Se comprueba aparte para poder dar un mensaje util cuando el
+    /// servidor no logra convertirlo: decirle a alguien "la imagen
+    /// esta danada" cuando en realidad es el formato de su telefono
+    /// lo deja sin saber que hacer.
+    /// </summary>
+    public static bool EsHeic(Stream s)
+    {
+        if (s.Length < 12) return false;
+
+        s.Position = 0;
+        var cabecera = new byte[12];
+        var leidos = s.Read(cabecera, 0, 12);
+        s.Position = 0;
+
+        if (leidos < 12) return false;
+
+        // Bytes 4 a 7: "ftyp"
+        if (cabecera[4] != 0x66 || cabecera[5] != 0x74 ||
+            cabecera[6] != 0x79 || cabecera[7] != 0x70) return false;
+
+        var tipo = System.Text.Encoding.ASCII.GetString(cabecera, 8, 4).ToLowerInvariant();
+
+        return TiposHeic.Contains(tipo);
+    }
+
     public static bool EsImagenValida(Stream s)
     {
         if (s.Length < 8) return false;
+
+        // El iPhone guarda en HEIC. Sin esto, cada foto tomada desde
+        // un iPhone se rechaza antes siquiera de intentar procesarla.
+        if (EsHeic(s)) return true;
 
         s.Position = 0;
         var cabecera = new byte[8];
@@ -66,6 +108,10 @@ public static class ProcesadorImagen
     public static (MemoryStream principal, MemoryStream thumb) Procesar(Stream original)
     {
         original.Position = 0;
+
+        // MagickImage lee HEIC igual que JPEG o PNG, y la salida
+        // siempre es WebP: el formato de entrada deja de importar
+        // apenas se procesa.
         using var imagen = new MagickImage(original);
 
         // Quita los metadatos EXIF, que incluyen la ubicacion GPS de
