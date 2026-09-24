@@ -122,6 +122,8 @@ public class VehiculoLN : IVehiculoLN
             v.PrecioPublicado,
             (short)v.Estado,
             v.VigenciaDias,
+            v.SemanasImportacionMin,
+            v.SemanasImportacionMax,
             v.Fotos
                 .OrderByDescending(f => f.EsPortada)
                 .ThenBy(f => f.Orden)
@@ -237,6 +239,7 @@ public class VehiculoLN : IVehiculoLN
                 x.Color, x.Descripcion,
                 x.CostoVehiculo, x.CostoFlete, x.CostoImpuestos, x.CostoTramites,
                 x.Honorario, x.PrecioPublicado, x.VigenciaDias,
+                x.SemanasImportacionMin, x.SemanasImportacionMax,
                 (short)x.Estado, x.Destacado, x.AceptaFinanciamiento))
             .FirstOrDefaultAsync(ct);
 
@@ -281,6 +284,8 @@ public class VehiculoLN : IVehiculoLN
             CostoTramites = dto.CostoTramites,
             Honorario = dto.Honorario,
             VigenciaDias = dto.VigenciaDias,
+            SemanasImportacionMin = dto.SemanasImportacionMin,
+            SemanasImportacionMax = dto.SemanasImportacionMax,
             Destacado = dto.Destacado,
             AceptaFinanciamiento = dto.AceptaFinanciamiento,
             Estado = EstadoVehiculo.Borrador,
@@ -346,6 +351,8 @@ public class VehiculoLN : IVehiculoLN
         v.CostoTramites = dto.CostoTramites;
         v.Honorario = dto.Honorario;
         v.VigenciaDias = dto.VigenciaDias;
+        v.SemanasImportacionMin = dto.SemanasImportacionMin;
+        v.SemanasImportacionMax = dto.SemanasImportacionMax;
         v.Destacado = dto.Destacado;
         v.AceptaFinanciamiento = dto.AceptaFinanciamiento;
         v.ActualizadoEn = DateTimeOffset.UtcNow;

@@ -168,6 +168,39 @@
             </small>
           </div>
 
+          <!-- Tiempo de importación: opcional. Vacío, la ficha no lo
+               muestra (útil para carros que ya están en el país). Va
+               a lo ancho con su propia rejilla para que mínimo y máximo
+               queden uno al lado del otro. -->
+          <div class="campo ancho importacion">
+            <div class="campos">
+              <div class="campo">
+                <label for="f-sem-min">Importación: mínimo (semanas)</label>
+                <input id="f-sem-min" type="number" inputmode="numeric" min="1" max="52" step="1"
+                       placeholder="Ej. 6"
+                       [ngModel]="semanasMin()" (ngModelChange)="cambiar(semanasMin, $event)">
+              </div>
+
+              <div class="campo">
+                <label for="f-sem-max">Importación: máximo (semanas)</label>
+                <input id="f-sem-max" type="number" inputmode="numeric" min="1" max="52" step="1"
+                       placeholder="Ej. 8"
+                       [ngModel]="semanasMax()" (ngModelChange)="cambiar(semanasMax, $event)">
+              </div>
+            </div>
+
+            @if (errorSemanas(); as e) {
+              <small class="error-campo" role="alert">{{ e }}</small>
+            } @else if (textoSemanas()) {
+              <small>En la ficha se verá: <strong>{{ textoSemanas() }}</strong>.</small>
+            } @else {
+              <small>
+                Dejalo vacío si el carro ya está en Costa Rica o no querés
+                mostrar el tiempo.
+              </small>
+            }
+          </div>
+
           <div class="campo ancho">
             <label class="casilla">
               <input type="checkbox"

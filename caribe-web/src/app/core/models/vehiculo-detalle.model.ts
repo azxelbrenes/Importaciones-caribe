@@ -17,6 +17,10 @@ export interface VehiculoDetalle {
   /// Días que vale la cotización. Los montos por línea no llegan: el
   /// backend no los manda.
   vigenciaDias: number;
+
+  /// Rango estimado de la importación, en semanas. Null si no se indicó.
+  semanasImportacionMin: number | null;
+  semanasImportacionMax: number | null;
   fotos: Foto[];
 
   /// Null si el vehículo no se financia o el financiamiento está apagado.

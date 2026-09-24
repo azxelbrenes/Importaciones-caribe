@@ -93,6 +93,9 @@
           <div><dt>Combustible</dt><dd>{{ v.combustible }}</dd></div>
           <div><dt>Tracción</dt><dd>{{ v.traccion }}</dd></div>
           @if (v.color) { <div><dt>Color</dt><dd>{{ v.color }}</dd></div> }
+          @if (tiempoImportacion(); as t) {
+            <div><dt>Tiempo de importación</dt><dd>{{ t }}</dd></div>
+          }
         </dl>
       </div>
     </div>

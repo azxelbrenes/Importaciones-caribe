@@ -38,6 +38,18 @@ export class FichaComponent {
 
   fotoActual = computed(() => this.v()?.fotos[this.indiceFoto()] ?? null);
 
+  /// "De 6 a 8 semanas", "6 semanas" o null si el negocio no lo
+  /// indicó para este vehículo (por ejemplo, uno que ya está en el país).
+  tiempoImportacion = computed(() => {
+    const v = this.v();
+    const min = v?.semanasImportacionMin ?? null;
+    const max = v?.semanasImportacionMax ?? null;
+
+    if (min === null) return null;
+    if (max === null || max === min) return `${min} ${min === 1 ? 'semana' : 'semanas'}`;
+    return `De ${min} a ${max} semanas`;
+  });
+
   constructor() {
     inject(ActivatedRoute).paramMap.pipe(
       switchMap(p => {

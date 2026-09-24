@@ -19,6 +19,8 @@ export interface VehiculoDetalleAdmin {
   honorario: number;
   precioPublicado: number;
   vigenciaDias: number;
+  semanasImportacionMin: number | null;
+  semanasImportacionMax: number | null;
   estado: number;
   destacado: boolean;
   aceptaFinanciamiento: boolean;
@@ -46,6 +48,8 @@ export interface GuardarVehiculo {
   costoTramites: number;
   honorario: number;
   vigenciaDias: number;
+  semanasImportacionMin: number | null;
+  semanasImportacionMax: number | null;
   destacado: boolean;
   aceptaFinanciamiento: boolean;
 }

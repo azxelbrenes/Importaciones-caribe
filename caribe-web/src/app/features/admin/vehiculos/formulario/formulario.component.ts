@@ -75,6 +75,11 @@ export class VehiculoFormularioComponent implements ConCambios {
   honorario      = signal<number>(0);
 
   vigenciaDias         = signal<number>(7);
+
+  /// Tiempo de importación en semanas. Vacío = no se muestra en la
+  /// ficha (por ejemplo, un carro que ya está en Costa Rica).
+  semanasMin           = signal<number | null>(null);
+  semanasMax           = signal<number | null>(null);
   destacado            = signal(false);
   aceptaFinanciamiento = signal(false);
 
@@ -107,11 +112,33 @@ export class VehiculoFormularioComponent implements ConCambios {
     return costo > 0 ? (this.num(this.honorario()) / costo) * 100 : 0;
   });
 
+  /// Problema con el rango de semanas, o null si está bien. Se revisa
+  /// acá para avisar antes de guardar; el servidor lo valida igual.
+  errorSemanas = computed(() => {
+    const min = this.numOpcional(this.semanasMin());
+    const max = this.numOpcional(this.semanasMax());
+    if (min !== null && (min < 1 || min > 52)) return 'El mínimo debe estar entre 1 y 52 semanas.';
+    if (max !== null && (max < 1 || max > 52)) return 'El máximo debe estar entre 1 y 52 semanas.';
+    if (max !== null && min === null) return 'Poné el mínimo si ponés un máximo.';
+    if (min !== null && max !== null && max < min) return 'El máximo no puede ser menor al mínimo.';
+    return null;
+  });
+
+  /// Cómo se va a leer en la ficha, para que se vea antes de guardar.
+  textoSemanas = computed(() => {
+    const min = this.numOpcional(this.semanasMin());
+    const max = this.numOpcional(this.semanasMax());
+    if (min === null || this.errorSemanas()) return null;
+    if (max === null || max === min) return `${min} ${min === 1 ? 'semana' : 'semanas'}`;
+    return `De ${min} a ${max} semanas`;
+  });
+
   valido = computed(() =>
     this.marcaId() !== null &&
     this.modeloId() !== null &&
     this.num(this.costoVehiculo()) > 0 &&
-    this.num(this.honorario()) > 0);
+    this.num(this.honorario()) > 0 &&
+    this.errorSemanas() === null);
 
   /// Qué falta, dicho en palabras. Un botón deshabilitado sin
   /// explicación deja a la persona adivinando.
@@ -121,6 +148,7 @@ export class VehiculoFormularioComponent implements ConCambios {
     if (this.modeloId() === null) f.push('modelo');
     if (this.num(this.costoVehiculo()) <= 0) f.push('costo del vehículo');
     if (this.num(this.honorario()) <= 0) f.push('honorario');
+    if (this.errorSemanas() !== null) f.push('tiempo de importación válido');
     return f;
   });
 
@@ -194,6 +222,8 @@ export class VehiculoFormularioComponent implements ConCambios {
         this.honorario.set(v.honorario);
 
         this.vigenciaDias.set(v.vigenciaDias);
+        this.semanasMin.set(v.semanasImportacionMin);
+        this.semanasMax.set(v.semanasImportacionMax);
         this.destacado.set(v.destacado);
         this.aceptaFinanciamiento.set(v.aceptaFinanciamiento);
 
@@ -251,6 +281,8 @@ export class VehiculoFormularioComponent implements ConCambios {
       costoTramites: this.num(this.costoTramites()),
       honorario: this.num(this.honorario()),
       vigenciaDias: this.num(this.vigenciaDias()),
+      semanasImportacionMin: this.numOpcional(this.semanasMin()),
+      semanasImportacionMax: this.numOpcional(this.semanasMax()),
       destacado: this.destacado(),
       aceptaFinanciamiento: this.aceptaFinanciamiento()
     };
@@ -304,5 +336,13 @@ export class VehiculoFormularioComponent implements ConCambios {
   private num(v: unknown): number {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
+  }
+
+  /// Igual que num(), pero un campo vacío es null y no cero: en los
+  /// campos opcionales, "no lo sé" y "cero" no son lo mismo.
+  private numOpcional(v: unknown): number | null {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.trunc(n) : null;
   }
 }

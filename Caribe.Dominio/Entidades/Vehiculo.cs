@@ -55,6 +55,17 @@ public class Vehiculo
     /// </summary>
     public short VigenciaDias { get; set; } = 7;
 
+    /// <summary>
+    /// Semanas que tarda la importacion, como rango: "de 6 a 8". Es
+    /// por vehiculo porque no tarda lo mismo uno que ya viene en
+    /// barco que uno que todavia esta en la subasta.
+    ///
+    /// Ambos null = no se muestra (por ejemplo, un carro que ya esta
+    /// en Costa Rica). Si solo hay minimo, se muestra ese numero.
+    /// </summary>
+    public short? SemanasImportacionMin { get; set; }
+    public short? SemanasImportacionMax { get; set; }
+
     // ══════════════════ FINANCIAMIENTO ══════════════════
 
     /// <summary>

@@ -38,6 +38,28 @@ public class CrearVehiculoValidator : AbstractValidator<CrearVehiculoDto>
             .InclusiveBetween((short)1, (short)90)
             .WithMessage("La vigencia debe estar entre 1 y 90 días.");
 
+        // Tiempo de importacion: opcional, pero si viene tiene que
+        // tener sentido. Un ano es mas que cualquier importacion real.
+        RuleFor(x => x.SemanasImportacionMin)
+            .InclusiveBetween((short)1, (short)52)
+            .When(x => x.SemanasImportacionMin.HasValue)
+            .WithMessage("El tiempo mínimo de importación debe estar entre 1 y 52 semanas.");
+
+        RuleFor(x => x.SemanasImportacionMax)
+            .InclusiveBetween((short)1, (short)52)
+            .When(x => x.SemanasImportacionMax.HasValue)
+            .WithMessage("El tiempo máximo de importación debe estar entre 1 y 52 semanas.");
+
+        RuleFor(x => x.SemanasImportacionMin)
+            .NotNull()
+            .When(x => x.SemanasImportacionMax.HasValue)
+            .WithMessage("Indique el tiempo mínimo de importación si pone un máximo.");
+
+        RuleFor(x => x.SemanasImportacionMax)
+            .GreaterThanOrEqualTo(x => x.SemanasImportacionMin)
+            .When(x => x.SemanasImportacionMin.HasValue && x.SemanasImportacionMax.HasValue)
+            .WithMessage("El tiempo máximo de importación no puede ser menor al mínimo.");
+
         RuleFor(x => x.Color).MaximumLength(40);
         RuleFor(x => x.Descripcion).MaximumLength(4000);
 
