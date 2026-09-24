@@ -59,14 +59,18 @@ public class CabecerasSeguridad
         var reglas = new List<string>
         {
             "default-src 'self'",
-            "script-src 'self'",
+            // El medidor de Cloudflare es el unico script externo que
+            // se permite. Sin esta linea la CSP lo bloquea y no mide
+            // nada, sin dar ningun aviso visible.
+            "script-src 'self' https://static.cloudflareinsights.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com data:",
 
             // Las fotos viven en R2, bajo el subdominio propio.
             "img-src 'self' data: blob: https:",
 
-            "connect-src 'self'",
+            // El medidor manda los datos a esta direccion.
+            "connect-src 'self' https://cloudflareinsights.com",
             "form-action 'self'",
             "base-uri 'self'",
             "frame-ancestors 'none'",

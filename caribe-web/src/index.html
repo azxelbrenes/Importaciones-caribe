@@ -18,5 +18,15 @@
 </head>
 <body>
   <app-root></app-root>
+
+  <!-- Medidor de Cloudflare: cuanta gente entra y que paginas mira.
+       No usa cookies ni identifica personas, asi que no hace falta el
+       aviso de cookies.
+
+       REEMPLAZAR el token por el que da Cloudflare en
+       Analytics & Logs > Web Analytics. Es publico: va en el HTML de
+       todas formas. -->
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "PEGAR_TOKEN_DE_CLOUDFLARE"}'></script>
 </body>
 </html>
