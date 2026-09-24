@@ -17,12 +17,14 @@ public partial class UsuarioLN
             return Respuesta<PerfilDto>.NoEncontrado("El usuario no existe.");
 
         var roles = await _users.GetRolesAsync(u);
+        var dobleFactor = await _users.GetTwoFactorEnabledAsync(u);
 
         return Respuesta<PerfilDto>.Ok(new PerfilDto(
             u.NombreCompleto,
             u.Email ?? string.Empty,
             roles,
-            await _users.GetTwoFactorEnabledAsync(u),
+            dobleFactor,
+            dobleFactor ? await _users.CountRecoveryCodesAsync(u) : 0,
             u.UltimoAcceso,
             u.CreadoEn));
     }

@@ -25,6 +25,10 @@ export class LoginComponent {
   codigo   = signal('');
 
   verPassword = signal(false);
+
+  /// Si la persona perdió el teléfono y va a usar uno de sus códigos
+  /// de respaldo en lugar del de la aplicación.
+  usarRespaldo = signal(false);
   enviando = signal(false);
   error = signal<string | null>(null);
 
@@ -47,6 +51,11 @@ export class LoginComponent {
   get valido(): boolean {
     if (this.paso() === 1)
       return this.email().includes('@') && this.password().length >= 1;
+
+    // Un código de respaldo no son seis dígitos: lleva letras y suele
+    // ir con guion. Se acepta cualquier texto de largo razonable.
+    if (this.usarRespaldo())
+      return this.codigo().replace(/[\s-]/g, '').length >= 8;
 
     return this.codigo().replace(/\D/g, '').length === 6;
   }
@@ -88,8 +97,15 @@ export class LoginComponent {
     });
   }
 
+  cambiarModo(): void {
+    this.usarRespaldo.update(v => !v);
+    this.codigo.set('');
+    this.error.set(null);
+  }
+
   volverAlPaso1(): void {
     this.paso.set(1);
+    this.usarRespaldo.set(false);
     this.codigo.set('');
     this.password.set('');
     this.error.set(null);
@@ -124,8 +140,11 @@ export class LoginComponent {
     }
   }
 
-  /// Deja solo dígitos y corta en 6: la aplicación siempre da seis.
+  /// De la aplicación: seis dígitos. De respaldo: letras, números y
+  /// guiones, hasta 20 caracteres.
   alEscribirCodigo(valor: string): void {
-    this.codigo.set(valor.replace(/\D/g, '').slice(0, 6));
+    this.codigo.set(this.usarRespaldo()
+      ? valor.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 20)
+      : valor.replace(/\D/g, '').slice(0, 6));
   }
 }

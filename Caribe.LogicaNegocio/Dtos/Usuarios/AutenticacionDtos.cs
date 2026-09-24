@@ -88,6 +88,17 @@ public class ActivarDobleFactorDto
     public string Codigo { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Generar codigos de respaldo nuevos. Se pide la contrasena: los
+/// codigos son una forma de entrar sin el telefono, y quien encuentre
+/// una sesion abierta no deberia poder fabricarse una.
+/// </summary>
+public class CodigosRespaldoDto
+{
+    [Required]
+    public string Password { get; set; } = string.Empty;
+}
+
 public class DesactivarDobleFactorDto
 {
     /// <summary>

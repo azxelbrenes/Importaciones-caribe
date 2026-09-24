@@ -12,6 +12,12 @@ public record PerfilDto(
     string Email,
     IEnumerable<string> Roles,
     bool DobleFactorActivo,
+
+    /// <summary>
+    /// Codigos de respaldo sin usar. Se muestra en Mi cuenta: quedarse
+    /// sin ellos y perder el telefono es quedarse afuera.
+    /// </summary>
+    int CodigosRespaldoRestantes,
     DateTimeOffset? UltimoAcceso,
     DateTimeOffset CreadoEn
 );

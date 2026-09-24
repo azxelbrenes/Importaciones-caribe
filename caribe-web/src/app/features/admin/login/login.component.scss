@@ -150,6 +150,31 @@
   }
 }
 
+// El código de respaldo lleva letras y guion: espaciado normal, no el
+// tratamiento de los seis dígitos.
+input.respaldo {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 17px;
+  letter-spacing: .12em;
+  padding: 14px 12px;
+}
+
+.modo {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  padding: 10px 0 14px;
+  text-align: left;
+
+  &:hover { text-decoration: underline; }
+}
+
 .volver {
   background: none;
   border: none;

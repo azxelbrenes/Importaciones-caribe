@@ -127,6 +127,16 @@ public class AuthController : ControladorBase
         [FromBody] ActivarDobleFactorDto dto, CancellationToken ct)
         => Resolver(await _ln.ActivarDobleFactorAsync(UsuarioActual, dto.Codigo, ct));
 
+    /// <summary>
+    /// Genera codigos de respaldo nuevos y anula los anteriores.
+    /// </summary>
+    [HttpPost("doble-factor/codigos")]
+    [Authorize]
+    [EnableRateLimiting("formularios")]
+    public async Task<IActionResult> RegenerarCodigos(
+        [FromBody] CodigosRespaldoDto dto, CancellationToken ct)
+        => Resolver(await _ln.RegenerarCodigosRespaldoAsync(UsuarioActual, dto.Password, ct));
+
     [HttpPost("doble-factor/desactivar")]
     [Authorize]
     [EnableRateLimiting("formularios")]

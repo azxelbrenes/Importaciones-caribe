@@ -83,10 +83,42 @@ public partial class UsuarioLN : IUsuarioLN
                     (new LoginResultadoDto(true, null), null));
             }
 
+            var codigo = dto.CodigoDobleFactor.Trim();
+
+            // Primero el codigo de la aplicacion. Si no coincide, se
+            // prueba como codigo de respaldo: alguien que perdio el
+            // telefono escribe uno de los diez que guardo.
             var valido = await _users.VerifyTwoFactorTokenAsync(
                 u,
                 _users.Options.Tokens.AuthenticatorTokenProvider,
-                dto.CodigoDobleFactor.Replace(" ", "").Trim());
+                codigo.Replace(" ", ""));
+
+            if (!valido)
+            {
+                // Canjear consume el codigo: cada uno sirve una sola
+                // vez. Identity lo borra de la lista al usarlo.
+                var canje = await _users.RedeemTwoFactorRecoveryCodeAsync(
+                    u, codigo.Replace(" ", ""));
+
+                if (canje.Succeeded)
+                {
+                    valido = true;
+
+                    // Cuantos quedan se registra en la auditoria y se
+                    // muestra en Mi cuenta: quedarse sin codigos y
+                    // perder el telefono es quedarse afuera.
+                    var restantes = await _users.CountRecoveryCodesAsync(u);
+
+                    _db.Registrar("Usuario", u.Id, AccionAuditoria.Acceso, u.Id,
+                        despues: new
+                        {
+                            Resultado = "Acceso con codigo de respaldo",
+                            CodigosRestantes = restantes
+                        },
+                        ip: ip);
+
+                }
+            }
 
             if (!valido)
             {
@@ -254,13 +286,13 @@ public partial class UsuarioLN : IUsuarioLN
     /// aplicacion quedaria bloqueado fuera de su propia cuenta sin
     /// forma de entrar.
     /// </summary>
-    public async Task<Respuesta<bool>> ActivarDobleFactorAsync(
+    public async Task<Respuesta<IEnumerable<string>>> ActivarDobleFactorAsync(
         string usuarioId, string codigo, CancellationToken ct = default)
     {
         var u = await _users.FindByIdAsync(usuarioId);
 
         if (u is null)
-            return Respuesta<bool>.NoEncontrado("El usuario no existe.");
+            return Respuesta<IEnumerable<string>>.NoEncontrado("El usuario no existe.");
 
         var valido = await _users.VerifyTwoFactorTokenAsync(
             u,
@@ -268,18 +300,53 @@ public partial class UsuarioLN : IUsuarioLN
             codigo.Replace(" ", "").Trim());
 
         if (!valido)
-            return Respuesta<bool>.Invalido(
+            return Respuesta<IEnumerable<string>>.Invalido(
                 "El código no es correcto. Verifique que la hora del " +
                 "teléfono esté sincronizada.");
 
         await _users.SetTwoFactorEnabledAsync(u, true);
 
+        // Los diez codigos se generan al activar, no despues: sin
+        // ellos, perder el telefono significa quedarse afuera hasta
+        // que alguien entre a la base de datos.
+        var codigos = await _users.GenerateNewTwoFactorRecoveryCodesAsync(u, 10);
+
         _db.Registrar("Usuario", u.Id, AccionAuditoria.Editar, usuarioId,
-            despues: new { DobleFactor = "Activado" });
+            despues: new { DobleFactor = "Activado", CodigosRespaldo = 10 });
 
         await _db.SaveChangesAsync(ct);
 
-        return Respuesta<bool>.Ok(true);
+        return Respuesta<IEnumerable<string>>.Ok(codigos?.ToList() ?? []);
+    }
+
+    public async Task<Respuesta<IEnumerable<string>>> RegenerarCodigosRespaldoAsync(
+        string usuarioId, string password, CancellationToken ct = default)
+    {
+        var u = await _users.FindByIdAsync(usuarioId);
+
+        if (u is null)
+            return Respuesta<IEnumerable<string>>.NoEncontrado("El usuario no existe.");
+
+        // Se pide la contrasena: los codigos son una forma de entrar
+        // sin el telefono, y quien encuentre una sesion abierta no
+        // deberia poder fabricarse una.
+        if (!await _users.CheckPasswordAsync(u, password))
+            return Respuesta<IEnumerable<string>>.Invalido("La contraseña no es correcta.");
+
+        if (!await _users.GetTwoFactorEnabledAsync(u))
+            return Respuesta<IEnumerable<string>>.Conflicto(
+                "La verificación en dos pasos no está activa.");
+
+        // Los anteriores dejan de servir: si alguien vio la lista
+        // vieja, regenerar es lo que la invalida.
+        var codigos = await _users.GenerateNewTwoFactorRecoveryCodesAsync(u, 10);
+
+        _db.Registrar("Usuario", u.Id, AccionAuditoria.Editar, usuarioId,
+            despues: new { Accion = "Códigos de respaldo regenerados" });
+
+        await _db.SaveChangesAsync(ct);
+
+        return Respuesta<IEnumerable<string>>.Ok(codigos?.ToList() ?? []);
     }
 
     public async Task<Respuesta<bool>> DesactivarDobleFactorAsync(

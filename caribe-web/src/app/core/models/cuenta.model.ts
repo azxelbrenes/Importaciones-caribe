@@ -3,6 +3,10 @@ export interface Perfil {
   email: string;
   roles: string[];
   dobleFactorActivo: boolean;
+
+  /// Códigos de respaldo sin usar. Quedarse sin ellos y perder el
+  /// teléfono es quedarse afuera.
+  codigosRespaldoRestantes: number;
   ultimoAcceso: string | null;
   creadoEn: string;
 }

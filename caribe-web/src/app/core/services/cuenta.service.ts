@@ -19,8 +19,14 @@ export class CuentaService {
     return this.http.post<ConfigDobleFactor>(`${this.auth}/doble-factor/configurar`, {});
   }
 
-  activarDobleFactor(codigo: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.auth}/doble-factor/activar`, { codigo });
+  /// Devuelve los diez códigos de respaldo. Es la única vez que se
+  /// ven completos: el servidor solo guarda su hash.
+  activarDobleFactor(codigo: string): Observable<string[]> {
+    return this.http.post<string[]>(`${this.auth}/doble-factor/activar`, { codigo });
+  }
+
+  regenerarCodigos(password: string): Observable<string[]> {
+    return this.http.post<string[]>(`${this.auth}/doble-factor/codigos`, { password });
   }
 
   desactivarDobleFactor(password: string): Observable<boolean> {

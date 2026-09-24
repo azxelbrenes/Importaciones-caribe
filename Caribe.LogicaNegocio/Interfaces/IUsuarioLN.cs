@@ -48,8 +48,19 @@ public interface IUsuarioLN
     Task<Respuesta<ConfigurarDobleFactorDto>> ConfigurarDobleFactorAsync(
         string usuarioId, CancellationToken ct = default);
 
-    Task<Respuesta<bool>> ActivarDobleFactorAsync(
+    /// <summary>
+    /// Activa la verificacion en dos pasos y devuelve los diez codigos
+    /// de respaldo. Es la UNICA vez que se ven completos: despues solo
+    /// se guarda su hash.
+    /// </summary>
+    Task<Respuesta<IEnumerable<string>>> ActivarDobleFactorAsync(
         string usuarioId, string codigo, CancellationToken ct = default);
+
+    /// <summary>
+    /// Genera diez codigos nuevos y anula los anteriores.
+    /// </summary>
+    Task<Respuesta<IEnumerable<string>>> RegenerarCodigosRespaldoAsync(
+        string usuarioId, string password, CancellationToken ct = default);
 
     Task<Respuesta<bool>> DesactivarDobleFactorAsync(
         string usuarioId, string password, CancellationToken ct = default);

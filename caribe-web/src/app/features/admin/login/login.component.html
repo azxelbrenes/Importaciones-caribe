@@ -46,20 +46,48 @@
 
       <div class="paso-dos">
         <p class="titulo">Verificación en dos pasos</p>
-        <p class="ayuda">
-          Abrí tu aplicación de autenticación y escribí el código de
-          6 dígitos que aparece.
-        </p>
 
-        <div class="campo">
-          <label for="l-codigo">Código</label>
-          <input id="l-codigo" type="text" inputmode="numeric"
-                 autocomplete="one-time-code" maxlength="6"
-                 placeholder="000000" class="codigo"
-                 [ngModel]="codigo()"
-                 (ngModelChange)="alEscribirCodigo($event)"
-                 (keyup.enter)="enviar()">
-        </div>
+        @if (usarRespaldo()) {
+          <p class="ayuda">
+            Escribí uno de los códigos de respaldo que guardaste al activar
+            la verificación. Cada uno sirve una sola vez.
+          </p>
+
+          <div class="campo">
+            <label for="l-codigo">Código de respaldo</label>
+            <input id="l-codigo" type="text" autocomplete="off" maxlength="20"
+                   placeholder="xxxxx-xxxxx" class="respaldo"
+                   [ngModel]="codigo()"
+                   (ngModelChange)="alEscribirCodigo($event)"
+                   (keyup.enter)="enviar()">
+          </div>
+        } @else {
+          <p class="ayuda">
+            Abrí tu aplicación de autenticación y escribí el código de
+            6 dígitos que aparece.
+          </p>
+
+          <div class="campo">
+            <label for="l-codigo">Código</label>
+            <input id="l-codigo" type="text" inputmode="numeric"
+                   autocomplete="one-time-code" maxlength="6"
+                   placeholder="000000" class="codigo"
+                   [ngModel]="codigo()"
+                   (ngModelChange)="alEscribirCodigo($event)"
+                   (keyup.enter)="enviar()">
+          </div>
+        }
+
+        <!-- La salida para quien perdió el teléfono. Sin esto, la
+             única opción sería pedirle a alguien que entre a la base
+             de datos. -->
+        <button class="modo" type="button" (click)="cambiarModo()">
+          @if (usarRespaldo()) {
+            Usar el código de la aplicación
+          } @else {
+            ¿Perdiste el teléfono? Usá un código de respaldo
+          }
+        </button>
 
         <button class="volver" type="button" (click)="volverAlPaso1()">
           ← Usar otra cuenta

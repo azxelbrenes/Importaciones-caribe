@@ -39,9 +39,24 @@ public class LoginValidator : AbstractValidator<LoginDto>
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Indique su contraseña.");
 
+        // Seis digitos si viene de la aplicacion, o un codigo de
+        // respaldo si la persona perdio el telefono. Se acepta
+        // cualquiera de los dos largos y el backend decide cual es.
         RuleFor(x => x.CodigoDobleFactor)
-            .Must(c => c is null || c.Replace(" ", "").Length == 6)
-            .WithMessage("El código debe tener 6 dígitos.");
+            .Must(c => c is null || FormatoCodigo.Valido(c))
+            .WithMessage("El código no tiene un formato válido.");
+    }
+}
+
+/// <summary>
+/// Seis digitos, o un codigo de respaldo de entre 8 y 20 caracteres.
+/// </summary>
+file static class FormatoCodigo
+{
+    public static bool Valido(string c)
+    {
+        var limpio = c.Replace(" ", "").Replace("-", "");
+        return limpio.Length == 6 || (limpio.Length >= 8 && limpio.Length <= 20);
     }
 }
 

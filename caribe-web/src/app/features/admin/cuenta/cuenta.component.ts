@@ -38,6 +38,12 @@ export class CuentaComponent {
   desactivando = signal(false);
   passwordDesactivar = signal('');
 
+  // ── Códigos de respaldo ──
+  codigos = signal<string[]>([]);
+  regenerando = signal(false);
+  passwordCodigos = signal('');
+  copiadoCodigos = signal(false);
+
   // ── Contraseña ──
   passActual = signal('');
   passNueva = signal('');
@@ -144,12 +150,14 @@ export class CuentaComponent {
     this.limpiarAvisos();
 
     this.servicio.activarDobleFactor(this.codigo()).subscribe({
-      next: () => {
+      next: (codigos) => {
         this.procesando.set(false);
         this.cancelarDobleFactor();
-        this.mensaje.set(
-          'Verificación en dos pasos activada. La próxima vez que entres ' +
-          'te va a pedir el código de la aplicación.');
+
+        // Se muestran de inmediato: es la única vez que se ven
+        // completos. Si la persona cierra sin guardarlos, hay que
+        // generar otros.
+        this.codigos.set(codigos ?? []);
         this.cargar();
       },
       error: (e) => {
@@ -182,6 +190,50 @@ export class CuentaComponent {
 
   alEscribirCodigo(valor: string): void {
     this.codigo.set(valor.replace(/\D/g, '').slice(0, 6));
+  }
+
+  // ══════════════ CÓDIGOS DE RESPALDO ══════════════
+
+  regenerar(): void {
+    if (!this.passwordCodigos() || this.procesando()) return;
+
+    this.procesando.set(true);
+    this.limpiarAvisos();
+
+    this.servicio.regenerarCodigos(this.passwordCodigos()).subscribe({
+      next: (codigos) => {
+        this.procesando.set(false);
+        this.regenerando.set(false);
+        this.passwordCodigos.set('');
+        this.codigos.set(codigos ?? []);
+        this.cargar();
+      },
+      error: (e) => {
+        this.procesando.set(false);
+        this.error.set(e?.error?.mensaje ?? 'No se pudieron generar los códigos.');
+      }
+    });
+  }
+
+  copiarCodigos(): void {
+    const lista = this.codigos();
+    if (lista.length === 0 || typeof navigator === 'undefined') return;
+
+    const texto =
+      'Códigos de respaldo · Importaciones del Caribe CR\n' +
+      'Cada uno sirve una sola vez. Guardalos donde no se pierdan.\n\n' +
+      lista.join('\n');
+
+    navigator.clipboard.writeText(texto)
+      .then(() => {
+        this.copiadoCodigos.set(true);
+        setTimeout(() => this.copiadoCodigos.set(false), 2000);
+      })
+      .catch(() => this.error.set('No se pudieron copiar. Anotalos a mano.'));
+  }
+
+  cerrarCodigos(): void {
+    this.codigos.set([]);
   }
 
   copiarClave(): void {

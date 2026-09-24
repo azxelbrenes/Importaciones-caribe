@@ -35,6 +35,49 @@
 
         <p class="estado activo">◆ Activada</p>
 
+        <!-- Los códigos restantes están a la vista: quedarse sin ellos
+             y perder el teléfono es quedarse afuera del panel. -->
+        <div class="respaldo" [class.pocos]="p.codigosRespaldoRestantes <= 2">
+          <div>
+            <strong>{{ p.codigosRespaldoRestantes }}</strong>
+            <span>
+              {{ p.codigosRespaldoRestantes === 1 ? 'código de respaldo' : 'códigos de respaldo' }}
+              sin usar
+            </span>
+          </div>
+          @if (p.codigosRespaldoRestantes <= 2) {
+            <small>Quedan pocos. Generá unos nuevos antes de que se agoten.</small>
+          }
+        </div>
+
+        @if (!regenerando() && !desactivando()) {
+          <button class="btn-borde codigos-btn" type="button" (click)="regenerando.set(true)">
+            Generar códigos nuevos
+          </button>
+        }
+
+        @if (regenerando()) {
+          <div class="campo">
+            <label for="c-pass-codigos">Tu contraseña, para confirmar</label>
+            <input id="c-pass-codigos" type="password" autocomplete="current-password"
+                   [ngModel]="passwordCodigos()"
+                   (ngModelChange)="passwordCodigos.set($event)"
+                   (keyup.enter)="regenerar()">
+            <small>Los códigos anteriores dejan de servir.</small>
+          </div>
+          <div class="botones">
+            <button class="btn-borde" type="button"
+                    (click)="regenerando.set(false); passwordCodigos.set('')">
+              Cancelar
+            </button>
+            <button class="btn-principal" type="button"
+                    [disabled]="!passwordCodigos() || procesando()"
+                    (click)="regenerar()">
+              Generar
+            </button>
+          </div>
+        }
+
         @if (!desactivando()) {
           <button class="btn-borde" type="button" (click)="desactivando.set(true)">
             Desactivar
@@ -212,4 +255,38 @@
     textoAceptar="Cerrar"
     (confirmar)="cerrarOtras()"
     (cancelar)="confirmarCerrarOtras.set(false)" />
+}
+
+<!-- ══════════ CÓDIGOS DE RESPALDO ══════════ -->
+@if (codigos().length > 0) {
+  <div class="fondo">
+    <div class="caja-codigos">
+      <p class="titulo">Guardá estos códigos</p>
+      <p class="explica">
+        Si perdés el teléfono, entrás con uno de estos en lugar del código
+        de la aplicación. Cada uno sirve una sola vez.
+      </p>
+
+      <ul class="lista-codigos">
+        @for (c of codigos(); track c) {
+          <li>{{ c }}</li>
+        }
+      </ul>
+
+      <div class="botones">
+        <button class="btn-principal" type="button" (click)="copiarCodigos()">
+          @if (copiadoCodigos()) { Copiados ✓ } @else { Copiar todos }
+        </button>
+        <button class="btn-borde" type="button" (click)="cerrarCodigos()">
+          Ya los guardé
+        </button>
+      </div>
+
+      <!-- No se vuelven a mostrar: el servidor solo guarda su hash. -->
+      <p class="aviso">
+        Esta es la única vez que se ven completos. Si los perdés, generá
+        unos nuevos desde acá.
+      </p>
+    </div>
+  </div>
 }
