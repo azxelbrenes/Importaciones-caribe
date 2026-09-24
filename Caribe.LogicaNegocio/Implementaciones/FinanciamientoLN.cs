@@ -22,6 +22,7 @@ public class FinanciamientoLN : IFinanciamientoLN
         return Respuesta<ConfiguracionFinanciamientoDto>.Ok(new ConfiguracionFinanciamientoDto(
             c.Activo,
             c.PorcentajePrima,
+            c.PorcentajeInteres,
             c.PlazoMinimoMeses,
             c.PlazoMaximoMeses,
             c.PlazosDisponibles,
@@ -64,10 +65,11 @@ public class FinanciamientoLN : IFinanciamientoLN
             _db.ConfiguracionFinanciamiento.Add(c);
         }
 
-        var antes = new { c.Activo, c.PorcentajePrima, c.PlazosDisponibles };
+        var antes = new { c.Activo, c.PorcentajePrima, c.PorcentajeInteres, c.PlazosDisponibles };
 
         c.Activo = dto.Activo;
         c.PorcentajePrima = dto.PorcentajePrima;
+        c.PorcentajeInteres = dto.PorcentajeInteres;
         c.PlazoMinimoMeses = dto.PlazoMinimoMeses;
         c.PlazoMaximoMeses = dto.PlazoMaximoMeses;
         c.PlazosDisponibles = string.Join(',', plazos);
@@ -76,7 +78,7 @@ public class FinanciamientoLN : IFinanciamientoLN
 
         _db.Registrar("ConfiguracionFinanciamiento", c.Id, AccionAuditoria.Editar, usuarioId,
             antes: antes,
-            despues: new { c.Activo, c.PorcentajePrima, c.PlazosDisponibles });
+            despues: new { c.Activo, c.PorcentajePrima, c.PorcentajeInteres, c.PlazosDisponibles });
 
         await _db.SaveChangesAsync(ct);
 

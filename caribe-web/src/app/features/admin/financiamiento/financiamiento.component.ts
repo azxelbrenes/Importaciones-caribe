@@ -27,6 +27,7 @@ export class FinanciamientoComponent {
 
   activo = signal(false);
   prima = signal(50);
+  interes = signal(15);
   plazoMin = signal(12);
   plazoMax = signal(36);
   plazos = signal('12,24,36');
@@ -56,15 +57,39 @@ export class FinanciamientoComponent {
       : null;
   });
 
+  errorInteres = computed(() => {
+    const i = Number(this.interes());
+    return Number.isFinite(i) && i >= 0 && i <= 100
+      ? null
+      : 'El interés debe estar entre 0 y 100.';
+  });
+
   primaEjemplo = computed(() =>
     (Number(this.precioEjemplo()) || 0) * ((Number(this.prima()) || 0) / 100));
+
+  /// Misma fórmula que el servidor (ConfiguracionFinanciamiento.CuotaMensual):
+  /// (precio − prima) × (1 + interés%) ÷ meses, redondeado al centavo
+  /// hacia arriba. Acá es solo para la vista previa; la cuota real que
+  /// ve el cliente la calcula el backend.
+  cuotasEjemplo = computed(() => {
+    const precio = Number(this.precioEjemplo()) || 0;
+    const financiado = precio - this.primaEjemplo();
+    const total = financiado * (1 + (Number(this.interes()) || 0) / 100);
+
+    return this.plazosLista().map(meses => ({
+      meses,
+      cuota: Math.ceil(total / meses * 100) / 100
+    }));
+  });
 
   /// El mensaje que le llega al dueño por WhatsApp, para ver cómo
   /// queda antes de activar.
   mensajeEjemplo = computed(() => {
-    const plazo = this.plazosLista()[0] ?? 12;
+    const c = this.cuotasEjemplo()[0];
+    const plazo = c?.meses ?? 12;
+    const cuota = c ? ` (cuota estimada de $${Math.round(c.cuota).toLocaleString('en-US')} al mes)` : '';
     return `Hola, me interesa el Mitsubishi L200 2022 con financiamiento ` +
-           `a ${plazo} meses. ¿Qué condiciones tienen?`;
+           `a ${plazo} meses${cuota}. ¿Me dan más información?`;
   });
 
   constructor() {
@@ -73,6 +98,7 @@ export class FinanciamientoComponent {
         this.guardado.set(c);
         this.activo.set(c.activo);
         this.prima.set(c.porcentajePrima);
+        this.interes.set(c.porcentajeInteres);
         this.plazoMin.set(c.plazoMinimoMeses);
         this.plazoMax.set(c.plazoMaximoMeses);
         this.plazos.set(c.plazosDisponibles);
@@ -86,7 +112,7 @@ export class FinanciamientoComponent {
   }
 
   guardar(): void {
-    if (this.errorPlazos() || this.guardando() || !this.puedeEditar()) return;
+    if (this.errorPlazos() || this.errorInteres() || this.guardando() || !this.puedeEditar()) return;
 
     this.guardando.set(true);
     this.error.set(null);
@@ -95,6 +121,7 @@ export class FinanciamientoComponent {
     this.servicio.actualizar({
       activo: this.activo(),
       porcentajePrima: Number(this.prima()) || 0,
+      porcentajeInteres: Number(this.interes()) || 0,
       plazoMinimoMeses: Number(this.plazoMin()) || 12,
       plazoMaximoMeses: Number(this.plazoMax()) || 36,
       plazosDisponibles: this.plazosLista().join(',')
@@ -102,7 +129,7 @@ export class FinanciamientoComponent {
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(this.activo()
-          ? 'Guardado. Los vehículos financiables ya muestran los plazos en el sitio.'
+          ? 'Guardado. Los vehículos financiables ya muestran los plazos y las cuotas en el sitio.'
           : 'Guardado. El financiamiento está apagado en todo el sitio.');
 
         this.servicio.obtener().subscribe(c => this.guardado.set(c));

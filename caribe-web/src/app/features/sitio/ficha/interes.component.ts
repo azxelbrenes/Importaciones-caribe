@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { VehiculoPublicoService } from '../../../core/services/vehiculo-publico.service';
 import { Contacto } from '../../../core/config/contacto';
 import {
-  FormaPago, ORIGEN_FICHA, VehiculoDetalle
+  FormaPago, ORIGEN_FICHA, VehiculoDetalle, cuotaDe
 } from '../../../core/models/vehiculo-detalle.model';
 
 @Component({
@@ -38,6 +38,13 @@ export class InteresComponent {
   error = signal<string | null>(null);
 
   financiable = computed(() => this.v().financiamiento !== null);
+
+  /// Cuota del plazo elegido, calculada por el servidor. Null mientras
+  /// no haya plazo.
+  cuota = computed(() => {
+    const f = this.v().financiamiento;
+    return f ? cuotaDe(f, this.plazo()) : null;
+  });
 
   digitos = computed(() => this.whatsapp().replace(/\D/g, ''));
 
@@ -111,8 +118,13 @@ export class InteresComponent {
     const v = this.v();
     const financiado = this.formaPago() === FormaPago.Financiado;
 
+    const cuota = this.cuota();
+    const textoCuota = cuota !== null
+      ? ` (cuota estimada de $${Math.round(cuota).toLocaleString('en-US')} al mes)`
+      : '';
+
     const pago = financiado
-      ? ` con financiamiento a ${this.plazo()} meses`
+      ? ` con financiamiento a ${this.plazo()} meses${textoCuota}`
       : ' de contado';
 
     return this.contacto.whatsappUrl(

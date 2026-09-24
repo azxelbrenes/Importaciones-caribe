@@ -38,6 +38,19 @@ export interface FinanciamientoVehiculo {
   porcentajePrima: number;
   prima: number;
   plazos: number[];
+  /// Cuota mensual de cada plazo, calculada en el servidor.
+  cuotas: CuotaFinanciamiento[];
+}
+
+export interface CuotaFinanciamiento {
+  meses: number;
+  cuota: number;
+}
+
+/// Cuota de un plazo, o null si no viene (no debería pasar).
+export function cuotaDe(f: FinanciamientoVehiculo, meses: number | null): number | null {
+  if (meses === null) return null;
+  return f.cuotas.find(c => c.meses === meses)?.cuota ?? null;
 }
 
 /// Lo que se envía al tocar "Me interesa".

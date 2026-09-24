@@ -3,10 +3,9 @@ namespace Caribe.Dominio.Entidades;
 /// <summary>
 /// Parametros del financiamiento. Una sola fila en la base.
 ///
-/// El sitio NO publica tasas ni cuotas: el cliente elige el plazo y
-/// el interes se lo da el dueno directamente por WhatsApp. Por eso
-/// aqui no hay tasa ni texto legal — no se publican condiciones de
-/// credito, solo que el vehiculo se puede financiar y en que plazos.
+/// El sitio muestra la cuota mensual estimada de cada plazo, pero NO
+/// el porcentaje de interes: la cuota se calcula en el servidor y al
+/// navegador solo llega el resultado.
 /// </summary>
 public class ConfiguracionFinanciamiento
 {
@@ -20,6 +19,13 @@ public class ConfiguracionFinanciamiento
 
     /// <summary>Porcentaje que el cliente paga por adelantado. 50 = mitad.</summary>
     public decimal PorcentajePrima { get; set; } = 50m;
+
+    /// <summary>
+    /// Interes que se suma UNA sola vez sobre el monto financiado, sin
+    /// importar el plazo. 15 = el cliente paga lo financiado mas 15%,
+    /// repartido en las cuotas. Nunca se envia al sitio publico.
+    /// </summary>
+    public decimal PorcentajeInteres { get; set; } = 15m;
 
     public short PlazoMinimoMeses { get; set; } = 12;
 
@@ -37,6 +43,28 @@ public class ConfiguracionFinanciamiento
 
     public DateTimeOffset ActualizadoEn { get; set; }
     public string? ActualizadoPorId { get; set; }
+
+    /// <summary>Lo que el cliente paga de entrada.</summary>
+    public decimal Prima(decimal precio) =>
+        Math.Round(precio * PorcentajePrima / 100m, 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// Cuota mensual: (precio - prima) * (1 + interes%) / meses.
+    ///
+    /// Interes simple, una sola vez sobre lo financiado: el negocio
+    /// cobra el mismo porcentaje a 12 que a 36 meses. Se redondea al
+    /// centavo hacia arriba para que la suma de cuotas nunca quede por
+    /// debajo del total.
+    /// </summary>
+    public decimal CuotaMensual(decimal precio, short meses)
+    {
+        if (meses <= 0) return 0m;
+
+        var financiado = precio - Prima(precio);
+        var total = financiado * (1m + PorcentajeInteres / 100m);
+
+        return Math.Ceiling(total / meses * 100m) / 100m;
+    }
 
     public IEnumerable<short> Plazos() =>
         PlazosDisponibles

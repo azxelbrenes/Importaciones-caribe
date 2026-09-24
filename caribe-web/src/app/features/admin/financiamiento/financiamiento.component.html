@@ -1,6 +1,6 @@
 <app-encabezado-seccion
   titulo="Financiamiento"
-  descripcion="Prima y plazos que el cliente puede elegir. El interés no se publica: lo das vos por WhatsApp." />
+  descripcion="Prima, interés y plazos. El cliente ve la cuota mensual de cada plazo, pero nunca el porcentaje de interés." />
 
 @if (mensaje()) { <p class="nota exito">{{ mensaje() }}</p> }
 @if (error())   { <p class="nota error">{{ error() }}</p> }
@@ -46,6 +46,20 @@
         </div>
 
         <div class="campo">
+          <label for="fi-interes">Interés (%)</label>
+          <input id="fi-interes" type="number" min="0" max="100" step="0.5"
+                 [ngModel]="interes()" (ngModelChange)="interes.set($event)">
+          @if (errorInteres(); as e) {
+            <small class="mal">{{ e }}</small>
+          } @else {
+            <small>
+              Se suma una sola vez sobre lo financiado, igual para
+              cualquier plazo. <strong>No se muestra en el sitio.</strong>
+            </small>
+          }
+        </div>
+
+        <div class="campo">
           <label for="fi-plazos">Plazos que se ofrecen (meses)</label>
           <input id="fi-plazos" type="text" placeholder="12,24,36"
                  [ngModel]="plazos()" (ngModelChange)="plazos.set($event)">
@@ -81,7 +95,7 @@
 
       @if (puedeEditar()) {
         <button class="btn-principal guardar" type="button"
-                [disabled]="errorPlazos() !== null || guardando()"
+                [disabled]="errorPlazos() !== null || errorInteres() !== null || guardando()"
                 (click)="guardar()">
           @if (guardando()) { Guardando… } @else { Guardar }
         </button>
@@ -105,8 +119,11 @@
           <strong>{{ primaEjemplo() | currency:'USD':'symbol':'1.0-0' }}</strong>
         </p>
         <div class="plazos">
-          @for (p of plazosLista(); track p) {
-            <span>{{ p }} meses</span>
+          @for (c of cuotasEjemplo(); track c.meses) {
+            <span>
+              {{ c.meses }} meses ·
+              <strong>{{ c.cuota | currency:'USD':'symbol':'1.0-0' }}</strong>/mes
+            </span>
           }
         </div>
       </div>

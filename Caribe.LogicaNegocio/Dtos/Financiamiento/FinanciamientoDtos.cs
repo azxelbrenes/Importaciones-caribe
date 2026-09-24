@@ -6,6 +6,7 @@ namespace Caribe.LogicaNegocio.Dtos.Financiamiento;
 public record ConfiguracionFinanciamientoDto(
     bool Activo,
     decimal PorcentajePrima,
+    decimal PorcentajeInteres,
     short PlazoMinimoMeses,
     short PlazoMaximoMeses,
     string PlazosDisponibles,
@@ -19,6 +20,10 @@ public class ActualizarFinanciamientoDto
     [Range(0, 100)]
     public decimal PorcentajePrima { get; set; } = 50m;
 
+    /// <summary>Una sola vez sobre lo financiado. Solo lo ve el panel.</summary>
+    [Range(0, 100)]
+    public decimal PorcentajeInteres { get; set; } = 15m;
+
     [Range(1, 120)] public short PlazoMinimoMeses { get; set; } = 12;
     [Range(1, 120)] public short PlazoMaximoMeses { get; set; } = 36;
 
@@ -28,7 +33,7 @@ public class ActualizarFinanciamientoDto
 
 /// <summary>
 /// Lo que ve el sitio publico: si se ofrece, la prima y los plazos.
-/// Nada de tasas: el interes lo da el dueno por WhatsApp.
+/// Nunca el interes: las cuotas vienen ya calculadas en cada ficha.
 /// </summary>
 public record FinanciamientoPublicoDto(
     bool Activo,

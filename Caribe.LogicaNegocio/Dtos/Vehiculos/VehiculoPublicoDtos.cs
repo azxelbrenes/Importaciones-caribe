@@ -34,15 +34,19 @@ public record FotoDto(
 /// Financiamiento de un vehiculo en la ficha. Solo aparece si el
 /// vehiculo lo acepta y la configuracion esta activa.
 ///
-/// Muestra la prima en dinero —dato util y que no revela ningun
-/// interes— y los plazos entre los que el cliente puede elegir. Las
-/// condiciones se las da el dueno por WhatsApp.
+/// Trae la prima en dinero, los plazos y la cuota mensual de cada uno,
+/// ya calculada. El porcentaje de interes NO viaja: el navegador solo
+/// recibe el resultado.
 /// </summary>
 public record FinanciamientoVehiculoDto(
     decimal PorcentajePrima,
     decimal Prima,
-    IReadOnlyList<short> Plazos
+    IReadOnlyList<short> Plazos,
+    IReadOnlyList<CuotaFinanciamientoDto> Cuotas
 );
+
+/// <summary>Cuota mensual estimada para un plazo.</summary>
+public record CuotaFinanciamientoDto(short Meses, decimal Cuota);
 
 public record VehiculoDetalleDto(
     /// <summary>

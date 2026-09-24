@@ -131,8 +131,8 @@
         <section class="bloque financiamiento">
           <h2>Podés financiarlo</h2>
           <p class="ayuda">
-            Prima del {{ f.porcentajePrima }}% y el resto en cuotas. Elegí
-            el plazo y te damos las condiciones por WhatsApp.
+            Prima del {{ f.porcentajePrima }}% y el resto en cuotas
+            mensuales. Elegí el plazo y escribinos por WhatsApp.
           </p>
 
           <p class="prima">
@@ -140,17 +140,19 @@
           </p>
 
           <div class="plazos">
-            @for (p of f.plazos; track p) {
-              <button type="button" (click)="abrirInteres(p)">
-                <span class="meses">{{ p }}</span>
+            @for (c of f.cuotas; track c.meses) {
+              <button type="button" (click)="abrirInteres(c.meses)">
+                <span class="meses">{{ c.meses }}</span>
                 <span class="etq">meses</span>
+                <span class="cuota">{{ c.cuota | currency:'USD':'symbol':'1.0-0' }}</span>
+                <span class="etq">por mes</span>
               </button>
             }
           </div>
 
           <p class="nota-legal">
-            Las condiciones del financiamiento se acuerdan directamente
-            con el cliente. Este sitio no publica tasas ni cuotas.
+            Cuotas estimadas, de referencia. Las condiciones finales se
+            confirman por WhatsApp y quedan por escrito entre las partes.
           </p>
         </section>
       }

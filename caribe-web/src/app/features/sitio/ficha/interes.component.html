@@ -56,15 +56,18 @@
         <div class="campo">
           <label>¿En cuántos meses?</label>
           <div class="opciones">
-            @for (p of f.plazos; track p) {
-              <button type="button" [class.activa]="plazo() === p" (click)="plazo.set(p)">
-                {{ p }} meses
+            @for (c of f.cuotas; track c.meses) {
+              <button type="button" [class.activa]="plazo() === c.meses" (click)="plazo.set(c.meses)">
+                {{ c.meses }} meses
               </button>
             }
           </div>
           <small>
             Prima de {{ f.prima | currency:'USD':'symbol':'1.0-0' }}.
-            Las condiciones te las damos por WhatsApp.
+            @if (cuota(); as q) {
+              Cuota estimada: <strong>{{ q | currency:'USD':'symbol':'1.0-0' }} por mes</strong>.
+            }
+            Las condiciones finales te las confirmamos por WhatsApp.
           </small>
         </div>
       }

@@ -81,9 +81,8 @@ public class VehiculoLN : IVehiculoLN
                 x => x.Visitas, x => x.Visitas + 1), ct);
 
         // El financiamiento aparece solo si el vehiculo lo acepta Y la
-        // configuracion esta activa. No se publican tasas ni cuotas:
-        // la prima y los plazos, y el interes lo da el dueno por
-        // WhatsApp.
+        // configuracion esta activa. Se publican la prima y la cuota de
+        // cada plazo, calculadas aca; el porcentaje de interes no sale.
         FinanciamientoVehiculoDto? financiamiento = null;
 
         if (v.AceptaFinanciamiento)
@@ -100,9 +99,12 @@ public class VehiculoLN : IVehiculoLN
                 {
                     financiamiento = new FinanciamientoVehiculoDto(
                         config.PorcentajePrima,
-                        Math.Round(v.PrecioPublicado * config.PorcentajePrima / 100m, 2,
-                            MidpointRounding.AwayFromZero),
-                        plazos);
+                        config.Prima(v.PrecioPublicado),
+                        plazos,
+                        plazos
+                            .Select(p => new CuotaFinanciamientoDto(
+                                p, config.CuotaMensual(v.PrecioPublicado, p)))
+                            .ToList());
                 }
             }
         }
